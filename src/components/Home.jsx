@@ -112,7 +112,7 @@ export const Home = () => {
       {/* Resumen de productos (Ticket) */}
       {selectedProducts.length > 0 && (
         <div className="mt-6 w-full px-4 max-w-md">
-          <h3 className="text-xl font-bold mb-4 text-gray-800">Resumen del Ticket</h3>
+          <h3 className="text-xl font-bold mb-4 text-gray-800">Resumen de compra </h3>
           <div className="bg-white shadow-md rounded-lg p-4">
             <ul className="space-y-2">
               {selectedProducts.map(product => (
