@@ -146,6 +146,7 @@ const Home = () => {
     try {
       await createPaymentLink(productName, totalAmount);
       setShowQR(true);
+       console.log("Enlace de pago generado:", paymentLink);
     } catch (error) {
       console.error("Error al generar el enlace de pago:", error);
     }
