@@ -110,7 +110,11 @@ export const usePaymentStore = create((set) => ({
     try {
       console.log('Datos del webhook:', webhookData);
 
+<<<<<<< HEAD
       const response = await axios.post(`${URL}Pagos/webhook`, webhookData);
+=======
+      const response = await axios.post(`${URL}/Pagos/webhook`, webhookData);
+>>>>>>> f9a4ea417156227f0d6d57d663107f97e0b0b261
 
       console.log('Webhook procesado:', response.data);
       set({ paymentLoading: false });
