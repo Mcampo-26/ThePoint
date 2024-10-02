@@ -6,26 +6,30 @@ import { useProductStore } from "../store/useProductStore";
 import ReactQRCode from "react-qr-code";
 import Swal from "sweetalert2";
 import { useLocation, useNavigate } from "react-router-dom";
+import Ticket from './Ticket'; // Importar el componente Ticket
 
 const Home = () => {
   const { createPaymentLink, paymentLink, paymentLoading } = usePaymentStore();
   const { products, fetchProducts, needsUpdate, setNeedsUpdate } =
     useProductStore();
   const [showQR, setShowQR] = useState(false);
-  const [localProducts, setLocalProducts] = useState([]); 
-  const location = useLocation(); 
-  const navigate = useNavigate(); 
+  const [localProducts, setLocalProducts] = useState([]); // Para gestionar cantidades de productos seleccionados
+  const [showTicket, setShowTicket] = useState(false); // Para mostrar el ticket después del pago
+  const [paymentStatus, setPaymentStatus] = useState(null); // Estado del pago
+  const [paymentId, setPaymentId] = useState(null); // ID del pago
+  const location = useLocation(); // Para obtener los parámetros de la URL
+  const navigate = useNavigate(); // Para redirigir después de los pagos
 
   // Obtener productos al cargar el componente
   useEffect(() => {
-    fetchProducts(); 
+    fetchProducts(); // Se obtienen los productos cuando se monta el componente
   }, [fetchProducts]);
 
   // Actualizar productos cuando detectamos que hay una actualización pendiente
   useEffect(() => {
     if (needsUpdate) {
-      fetchProducts(); 
-      setNeedsUpdate(false); 
+      fetchProducts(); // Volver a obtener los productos si hay cambios
+      setNeedsUpdate(false); // Restablecer la bandera después de la actualización
     }
   }, [needsUpdate, fetchProducts, setNeedsUpdate]);
 
@@ -33,7 +37,7 @@ const Home = () => {
   useEffect(() => {
     const initializedProducts = products.map((product) => ({
       ...product,
-      quantity: 0, 
+      quantity: 0, // Inicializa la cantidad en 0 para cada producto
     }));
     setLocalProducts(initializedProducts);
   }, [products]);
@@ -42,39 +46,44 @@ const Home = () => {
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
     const status = queryParams.get("status");
+    const paymentId = queryParams.get("payment_id");
 
-    // Log para verificar los parámetros de la URL
+    // Log para verificar los parámetros de la URL que envía Mercado Pago
     console.log('Parámetros de la URL:', queryParams.toString());
     console.log('Estado del pago recibido:', status);
 
     if (status === "approved") {
+      setPaymentStatus("approved");
+      setPaymentId(paymentId);
+      setShowTicket(true); // Mostrar el ticket cuando el pago sea exitoso
       Swal.fire({
         title: "¡Pago Exitoso!",
         text: "Gracias por tu compra.",
         icon: "success",
         confirmButtonText: "OK",
       });
-      navigate("/");  
     } else if (status === "pending") {
+      setPaymentStatus("pending");
+      setPaymentId(paymentId);
+      setShowTicket(true); // Mostrar el ticket si el pago está pendiente
       Swal.fire({
         title: "Pago Pendiente",
         text: "Tu pago está pendiente de confirmación.",
         icon: "info",
         confirmButtonText: "OK",
       });
-      navigate("/");  
     } else if (status === "failure") {
+      setPaymentStatus("failure");
+      setPaymentId(paymentId);
+      setShowTicket(true); // Mostrar el ticket si el pago falló
       Swal.fire({
         title: "Pago Rechazado",
         text: "Tu pago no pudo ser procesado.",
         icon: "error",
         confirmButtonText: "OK",
       });
-      navigate("/");  
     }
   }, [location, navigate]);
-  
-  
 
   const incrementQuantity = (id) => {
     setLocalProducts(
@@ -279,6 +288,16 @@ const Home = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Mostrar el ticket si el pago se completó, está pendiente o falló */}
+      {showTicket && (
+        <Ticket 
+          status={paymentStatus} 
+          productName="La Previa" 
+          totalAmount={totalAmount} 
+          paymentId={paymentId} 
+        />
       )}
     </div>
   );
