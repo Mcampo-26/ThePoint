@@ -6,8 +6,7 @@ import { useProductStore } from "../store/useProductStore";
 import ReactQRCode from "react-qr-code";
 import Swal from "sweetalert2";
 import { useLocation, useNavigate } from "react-router-dom";
-import Ticket from './Ticket'; // Importación correcta para una exportación por defecto
-
+import Ticket from "./Ticket";
 
 const Home = () => {
   const { createPaymentLink, paymentLink, paymentLoading } = usePaymentStore();
@@ -62,6 +61,9 @@ const Home = () => {
         text: "Gracias por tu compra.",
         icon: "success",
         confirmButtonText: "OK",
+      }).then(() => {
+        // Ejecuta la impresión automática después de que el usuario haga clic en OK
+        window.print();
       });
     } else if (status === "pending") {
       setPaymentStatus("pending");
@@ -147,7 +149,6 @@ const Home = () => {
     try {
       await createPaymentLink(productName, totalAmount);
       setShowQR(true);
-       console.log("Enlace de pago generado:", paymentLink);
     } catch (error) {
       console.error("Error al generar el enlace de pago:", error);
     }
