@@ -6,7 +6,9 @@ import { useProductStore } from "../store/useProductStore";
 import ReactQRCode from "react-qr-code";
 import Swal from "sweetalert2";
 import { useLocation, useNavigate } from "react-router-dom";
+
 import {Ticket} from './Tcket'; // Importar el componente Ticket
+
 
 const Home = () => {
   const { createPaymentLink, paymentLink, paymentLoading } = usePaymentStore();
