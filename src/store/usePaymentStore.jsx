@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import axios from 'axios';
-import { URL, NGROK_URL } from '../utilities/config.js';
+import { URL} from '../utilities/config.js';
 
 export const usePaymentStore = create((set) => ({
   // Estado de pagos
@@ -22,7 +22,7 @@ export const usePaymentStore = create((set) => ({
     try {
       console.log('Datos a enviar al backend:', { title: productName, price: parseFloat(price) });
 
-      const response = await axios.post(`${NGROK_URL}/Pagos/create_payment_link`, {
+      const response = await axios.post(`${URL}/Pagos/create_payment_link`, {
         title: productName, // Enviar el título del producto
         price: parseFloat(price), // Asegurarse de que el precio sea un número
       });
@@ -91,7 +91,7 @@ export const usePaymentStore = create((set) => ({
     try {
       console.log('Detalles de pago a registrar:', paymentDetails);
 
-      const response = await axios.post(`${URL}/Pagos/register_payment`, paymentDetails);
+      const response = await axios.post(`${URL}Pagos/register_payment`, paymentDetails);
 
       console.log('Pago registrado:', response.data);
       set({ paymentLoading: false });
@@ -110,7 +110,7 @@ export const usePaymentStore = create((set) => ({
     try {
       console.log('Datos del webhook:', webhookData);
 
-      const response = await axios.post(`${NGROK_URL}/Pagos/webhook`, webhookData);
+      const response = await axios.post(`${URL}Pagos/webhook`, webhookData);
 
       console.log('Webhook procesado:', response.data);
       set({ paymentLoading: false });
