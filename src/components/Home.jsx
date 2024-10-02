@@ -12,20 +12,20 @@ const Home = () => {
   const { products, fetchProducts, needsUpdate, setNeedsUpdate } =
     useProductStore();
   const [showQR, setShowQR] = useState(false);
-  const [localProducts, setLocalProducts] = useState([]); // Para gestionar cantidades de productos seleccionados
-  const location = useLocation(); // Para obtener los parámetros de la URL
-  const navigate = useNavigate(); // Para redirigir después de los pagos
+  const [localProducts, setLocalProducts] = useState([]); 
+  const location = useLocation(); 
+  const navigate = useNavigate(); 
 
   // Obtener productos al cargar el componente
   useEffect(() => {
-    fetchProducts(); // Se obtienen los productos cuando se monta el componente
+    fetchProducts(); 
   }, [fetchProducts]);
 
   // Actualizar productos cuando detectamos que hay una actualización pendiente
   useEffect(() => {
     if (needsUpdate) {
-      fetchProducts(); // Volver a obtener los productos si hay cambios
-      setNeedsUpdate(false); // Restablecer la bandera después de la actualización
+      fetchProducts(); 
+      setNeedsUpdate(false); 
     }
   }, [needsUpdate, fetchProducts, setNeedsUpdate]);
 
@@ -33,7 +33,7 @@ const Home = () => {
   useEffect(() => {
     const initializedProducts = products.map((product) => ({
       ...product,
-      quantity: 0, // Inicializa la cantidad en 0 para cada producto
+      quantity: 0, 
     }));
     setLocalProducts(initializedProducts);
   }, [products]);
@@ -42,10 +42,11 @@ const Home = () => {
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
     const status = queryParams.get("status");
-  
+
+    // Log para verificar los parámetros de la URL
     console.log('Parámetros de la URL:', queryParams.toString());
     console.log('Estado del pago recibido:', status);
-  
+
     if (status === "approved") {
       Swal.fire({
         title: "¡Pago Exitoso!",
@@ -53,7 +54,7 @@ const Home = () => {
         icon: "success",
         confirmButtonText: "OK",
       });
-      navigate("/");  // Aquí rediriges al inicio después del pago exitoso
+      navigate("/");  
     } else if (status === "pending") {
       Swal.fire({
         title: "Pago Pendiente",
@@ -61,7 +62,7 @@ const Home = () => {
         icon: "info",
         confirmButtonText: "OK",
       });
-      navigate("/");  // Aquí también rediriges al inicio
+      navigate("/");  
     } else if (status === "failure") {
       Swal.fire({
         title: "Pago Rechazado",
@@ -69,7 +70,7 @@ const Home = () => {
         icon: "error",
         confirmButtonText: "OK",
       });
-      navigate("/");  // Redirige al inicio en caso de fallo
+      navigate("/");  
     }
   }, [location, navigate]);
   
