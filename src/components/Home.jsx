@@ -43,39 +43,36 @@ const Home = () => {
     const queryParams = new URLSearchParams(location.search);
     const status = queryParams.get("status");
   
-    // Log para verificar los parámetros de la URL que envía Mercado Pago
     console.log('Parámetros de la URL:', queryParams.toString());
     console.log('Estado del pago recibido:', status);
   
     if (status === "approved") {
-      console.log("El pago fue aprobado.");
       Swal.fire({
         title: "¡Pago Exitoso!",
         text: "Gracias por tu compra.",
         icon: "success",
         confirmButtonText: "OK",
       });
-      navigate("/"); // Redirige después de mostrar la alerta
+      navigate("/");  // Aquí rediriges al inicio después del pago exitoso
     } else if (status === "pending") {
-      console.log("El pago está pendiente.");
       Swal.fire({
         title: "Pago Pendiente",
         text: "Tu pago está pendiente de confirmación.",
         icon: "info",
         confirmButtonText: "OK",
       });
-      navigate("/"); // Redirige después de mostrar la alerta
+      navigate("/");  // Aquí también rediriges al inicio
     } else if (status === "failure") {
-      console.log("El pago fue rechazado.");
       Swal.fire({
         title: "Pago Rechazado",
         text: "Tu pago no pudo ser procesado.",
         icon: "error",
         confirmButtonText: "OK",
       });
-      navigate("/"); // Redirige después de mostrar la alerta
+      navigate("/");  // Redirige al inicio en caso de fallo
     }
   }, [location, navigate]);
+  
   
 
   const incrementQuantity = (id) => {
