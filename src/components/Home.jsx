@@ -8,8 +8,6 @@ import Swal from "sweetalert2";
 import { useLocation, useNavigate } from "react-router-dom";
 import Ticket from "./Ticket";
 
-
-
 const Home = () => {
   const { createPaymentLink, paymentLink, paymentLoading } = usePaymentStore();
   const { products, fetchProducts, needsUpdate, setNeedsUpdate } =
@@ -63,6 +61,9 @@ const Home = () => {
         text: "Gracias por tu compra.",
         icon: "success",
         confirmButtonText: "OK",
+      }).then(() => {
+        // Ejecuta la impresión automática después de que el usuario haga clic en OK
+        window.print();
       });
     } else if (status === "pending") {
       setPaymentStatus("pending");
