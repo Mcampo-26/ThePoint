@@ -23,6 +23,7 @@ const Home = () => {
   const [paymentStatus, setPaymentStatus] = useState(null); // Estado del pago
   const [paymentId, setPaymentId] = useState(null); // ID del pago
   const hiddenTicketRef = useRef(null); // Para acceder al contenido del ticket de forma oculta
+  const [resetKey, setResetKey] = useState(0); // Estado para forzar el re-render del componente
 
   // Obtener productos al cargar el componente
   useEffect(() => {
@@ -126,10 +127,10 @@ const Home = () => {
     }
   };
 
-  // Función para cerrar el modal del QR y poner en cero los productos y el resumen de compra
+  // Función para cerrar el modal del QR y resetear productos
   const handleCloseQR = () => {
     setShowQR(false); // Cerrar el modal del QR
-    resetAll(); // Reseteamos los productos y el estado del pago
+    setResetKey((prevKey) => prevKey + 1); // Forzar re-render cambiando el key del componente
   };
 
   // Función que resetea todo: productos, estado del pago y QR
@@ -201,7 +202,7 @@ const Home = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-gray-100 flex flex-col items-center py-10 bg-gray-300">
+    <div key={resetKey} className="relative min-h-screen bg-gray-100 flex flex-col items-center py-10 bg-gray-300">
       {/* Si se muestra el QR, difumina el contenido detrás */}
       <div className="mb-8 w-full max-w-5xl mx-auto px-4 lg:px-0">
         <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-400 py-3 px-6 rounded-lg inline-block">
