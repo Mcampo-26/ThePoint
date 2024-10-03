@@ -288,7 +288,7 @@ const Home = () => {
                   {totalProducts} {formatUnits(totalProducts)}
                 </span>
               </div>
-              <div className="mt-4 border-t pt-4 flex justify-between font-bold">
+              <div className="mt-4 border-t pt-4 flex justify_between font-bold">
                 <span>Total a pagar:</span>
                 <span>${totalAmount}</span>
               </div>
