@@ -84,69 +84,75 @@ const Home = () => {
   
   
   // Función para manejar el resultado del pago y resetear productos
-  const handlePaymentResult = (status, paymentId) => {
-    const selectedProducts = localProducts.filter(
-      (product) => product.quantity > 0
-    );
-  
-    setPaymentStatus(status);
-    setPaymentId(paymentId);
-  
-    // Función para imprimir el ticket
-    const printTicket = () => {
-      const printArea = document.getElementById("printArea");
-      const originalContent = document.body.innerHTML;
-  
-      document.body.innerHTML = printArea.innerHTML;
-      window.print();
-      document.body.innerHTML = originalContent;
-  
-      // Mostrar el mensaje después de la impresión
-      Swal.fire({
-        title: "Gracias por tu compra!",
-        text: "Se ha completado exitosamente.",
-        icon: "success",
-      }).then(() => {
-        resetAll(); // Aquí reseteamos todo después del mensaje
-      });
-    };
-  
-    // Mostrar el SweetAlert según el estado del pago
-    if (status === "approved") {
-      Swal.fire({
-        title: "¡Pago Exitoso!",
-        text: "Gracias por tu compra.",
-        icon: "success",
-        confirmButtonText: "OK",
-      }).then(() => {
-        printTicket(); // Imprimir ticket después de SweetAlert
-      });
-    } else if (status === "pending") {
-      Swal.fire({
-        title: "Pago Pendiente",
-        text: "Tu pago está pendiente de confirmación.",
-        icon: "info",
-        confirmButtonText: "OK",
-      }).then(() => {
-        printTicket(); // Imprimir ticket en estado pendiente
-      });
-    } else if (status === "failure") {
-      Swal.fire({
-        title: "Pago Rechazado",
-        text: "Tu pago no pudo ser procesado.",
-        icon: "error",
-        confirmButtonText: "OK",
-      }).then(() => {
-        printTicket(); // Imprimir ticket en estado fallido
-      });
-    }
+  // Función para manejar el resultado del pago y resetear productos
+const handlePaymentResult = (status, paymentId) => {
+  const selectedProducts = localProducts.filter(
+    (product) => product.quantity > 0
+  );
+
+  setPaymentStatus(status);
+  setPaymentId(paymentId);
+
+  // Función para imprimir el ticket
+  const printTicket = () => {
+    const printArea = document.getElementById("printArea");
+    const originalContent = document.body.innerHTML;
+
+    document.body.innerHTML = printArea.innerHTML;
+    window.print();
+    document.body.innerHTML = originalContent;
+
+    // Mostrar el mensaje después de la impresión
+    Swal.fire({
+      title: "Gracias por tu compra!",
+      text: "Se ha completado exitosamente.",
+      icon: "success",
+      showConfirmButton: false, // No mostramos el botón de confirmación
+      timer: 3000, // El SweetAlert se cierra automáticamente en 3 segundos
+    }).then(() => {
+      resetAll(); // Aquí reseteamos todo después del mensaje
+    });
   };
-  
-  // Función para cerrar el modal del QR y poner en cero los productos
-  const handleCloseQR = () => {
-    setShowQR(false);
-    resetAll(); // Poner en cero todos los productos y resetear la orden
-  };
+
+  // Mostrar el SweetAlert según el estado del pago
+  if (status === "approved") {
+    Swal.fire({
+      title: "¡Pago Exitoso!",
+      text: "Gracias por tu compra.",
+      icon: "success",
+      showConfirmButton: false, // Sin botón de confirmación
+      timer: 3000, // Se cierra automáticamente en 3 segundos
+    }).then(() => {
+      setTimeout(printTicket, 3000); // Imprimir ticket después de 3 segundos
+    });
+  } else if (status === "pending") {
+    Swal.fire({
+      title: "Pago Pendiente",
+      text: "Tu pago está pendiente de confirmación.",
+      icon: "info",
+      showConfirmButton: false, // Sin botón de confirmación
+      timer: 3000, // Se cierra automáticamente en 3 segundos
+    }).then(() => {
+      setTimeout(printTicket, 3000); // Imprimir ticket en estado pendiente
+    });
+  } else if (status === "failure") {
+    Swal.fire({
+      title: "Pago Rechazado",
+      text: "Tu pago no pudo ser procesado.",
+      icon: "error",
+      showConfirmButton: false, // Sin botón de confirmación
+      timer: 3000, // Se cierra automáticamente en 3 segundos
+    }).then(() => {
+      setTimeout(printTicket, 3000); // Imprimir ticket en estado fallido
+    });
+  }
+};
+
+// Función para cerrar el modal del QR y poner en cero los productos
+const handleCloseQR = () => {
+  resetAll(); // Poner en cero todos los productos y resetear la orden
+};
+
   
   
 
@@ -364,7 +370,7 @@ const Home = () => {
             height: "9cm",
             margin: "0 auto", // Centramos horizontalmente
             position: "relative", // Permite ajustar con left
-            left: "-1cm", // Mueve el contenido hacia la izquierda
+            left: "-2cm", // Mueve el contenido hacia la izquierda
             padding: "0",
             textAlign: "center",
             fontSize: "90px",
@@ -380,7 +386,7 @@ const Home = () => {
           >
             Vale por
           </h2>
-          <p style={{ fontSize: "55px", marginleft: "5px" }}>
+          <p style={{ fontSize: "65px", marginleft: "5px" }}>
             {products.length > 0
               ? products[0].name.replace(/[0-9]/g, "")
               : "Producto no disponible"}
