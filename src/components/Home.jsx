@@ -335,19 +335,23 @@ const Home = () => {
 
       {/* Div oculto para imprimir el ticket */}
       <div id="printArea" style={{ display: "none" }}>
-        <div
-          style={{
-            width: "10cm",
-            height: "10cm",
-            padding: "10px",
-            textAlign: "center",
-            border: "1px solid #000",
-          }}
-        >
-          <h2>Vale por:</h2>
-          <p>{selectedProducts.map((product) => product.name).join(", ")}</p>
-        </div>
-      </div>
+  <div
+    style={{
+      width: "5cm", // Ajusta el ancho a 5 cm
+      height: "5cm", // Ajusta la altura a 5 cm
+      padding: "5px", // Mantén un pequeño padding
+      textAlign: "center",
+      fontSize: "18px", // Aumenta el tamaño de la fuente
+      border: "1px solid #000", // Mantén el borde para referencia visual
+    }}
+  >
+    <h2 style={{ fontSize: "20px", marginBottom: "5px" }}>Vale por:</h2> {/* Título con fuente más grande */}
+    <p style={{ fontSize: "18px" }}>
+      {selectedProducts.map((product) => product.name).join(", ")}
+    </p>
+  </div>
+</div>
+
     </div>
   );
 };
