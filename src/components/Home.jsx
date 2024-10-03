@@ -149,6 +149,7 @@ const resetAll = () => {
   );
   setPaymentStatus(null); // Resetea el estado del pago
   setPaymentId(null); // Resetea el ID de la orden
+  fetchProducts(); // Volver a cargar los productos desde el servidor o el estado global
 };
 
 
