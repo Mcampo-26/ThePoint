@@ -70,21 +70,12 @@ const Home = () => {
   // Función para manejar el estado del pago
   // Función para manejar el resultado del pago y resetear productos
 
-  const resetAll = () => {
-    setLocalProducts((prevProducts) => 
-      prevProducts.map((product) => ({
-        ...product,
-        quantity: 0, // Resetea la cantidad de todos los productos
-      }))
-    );
-    setPaymentStatus(null); // Resetea el estado del pago
-    setPaymentId(null); // Resetea el ID de la orden
-    setShowQR(false); // Cierra el modal del QR
-  };
+  c
   
   
-  // Función para manejar el resultado del pago y resetear productos
-  // Función para manejar el resultado del pago y resetear productos
+
+// Función para manejar el resultado del pago y resetear productos
+// Función para manejar el resultado del pago y resetear productos
 const handlePaymentResult = (status, paymentId) => {
   const selectedProducts = localProducts.filter(
     (product) => product.quantity > 0
@@ -102,16 +93,8 @@ const handlePaymentResult = (status, paymentId) => {
     window.print();
     document.body.innerHTML = originalContent;
 
-    // Mostrar el mensaje después de la impresión
-    Swal.fire({
-      title: "Gracias por tu compra!",
-      text: "Se ha completado exitosamente.",
-      icon: "success",
-      showConfirmButton: false, // No mostramos el botón de confirmación
-      timer: 3000, // El SweetAlert se cierra automáticamente en 3 segundos
-    }).then(() => {
-      resetAll(); // Aquí reseteamos todo después del mensaje
-    });
+    // Reseteamos productos y cerramos el QR
+    resetAll();
   };
 
   // Mostrar el SweetAlert según el estado del pago
@@ -121,9 +104,10 @@ const handlePaymentResult = (status, paymentId) => {
       text: "Gracias por tu compra.",
       icon: "success",
       showConfirmButton: false, // Sin botón de confirmación
-      timer: 3000, // Se cierra automáticamente en 3 segundos
+      timer: 2000, // Se cierra automáticamente en 3 segundos
     }).then(() => {
-      setTimeout(printTicket, 3000); // Imprimir ticket después de 3 segundos
+      handleCloseQR(); // Cerrar QR antes de imprimir
+      setTimeout(printTicket, 1000); // Imprimir ticket después de 1 segundo
     });
   } else if (status === "pending") {
     Swal.fire({
@@ -133,7 +117,8 @@ const handlePaymentResult = (status, paymentId) => {
       showConfirmButton: false, // Sin botón de confirmación
       timer: 3000, // Se cierra automáticamente en 3 segundos
     }).then(() => {
-      setTimeout(printTicket, 3000); // Imprimir ticket en estado pendiente
+      handleCloseQR(); // Cerrar QR antes de imprimir
+      setTimeout(printTicket, 1000); // Imprimir ticket en estado pendiente
     });
   } else if (status === "failure") {
     Swal.fire({
@@ -143,15 +128,31 @@ const handlePaymentResult = (status, paymentId) => {
       showConfirmButton: false, // Sin botón de confirmación
       timer: 3000, // Se cierra automáticamente en 3 segundos
     }).then(() => {
-      setTimeout(printTicket, 3000); // Imprimir ticket en estado fallido
+      handleCloseQR(); // Cerrar QR antes de imprimir
+      setTimeout(printTicket, 1000); // Imprimir ticket en estado fallido
     });
   }
 };
 
-// Función para cerrar el modal del QR y poner en cero los productos
+// Función para cerrar el modal del QR y poner en cero los productos y el resumen de compra
 const handleCloseQR = () => {
-  resetAll(); // Poner en cero todos los productos y resetear la orden
+  setShowQR(false); // Cerrar el modal del QR
+  resetAll(); // Reseteamos los productos y el estado del pago
 };
+
+// Función que resetea todo: productos, estado del pago y QR
+const resetAll = () => {
+  setLocalProducts((prevProducts) =>
+    prevProducts.map((product) => ({
+      ...product,
+      quantity: 0, // Resetea la cantidad de todos los productos
+    }))
+  );
+  setPaymentStatus(null); // Resetea el estado del pago
+  setPaymentId(null); // Resetea el ID de la orden
+};
+
+
 
   
   
@@ -380,13 +381,13 @@ const handleCloseQR = () => {
           <h2
             style={{
               fontSize: "30px",
-              marginTop: "-18px", // Reduce el margen superior para subir el contenido
-              marginBottom: "6px", // También ajusta el margen inferior para no dejar espacio extra
+              marginTop: "-25x", // Reduce el margen superior para subir el contenido
+              marginBottom: "5px", // También ajusta el margen inferior para no dejar espacio extra
             }}
           >
             Vale por
           </h2>
-          <p style={{ fontSize: "65px", marginleft: "5px" }}>
+          <p style={{ fontSize: "68px", marginleft: "5px" }}>
             {products.length > 0
               ? products[0].name.replace(/[0-9]/g, "")
               : "Producto no disponible"}
