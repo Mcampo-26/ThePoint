@@ -5,18 +5,19 @@ import { usePaymentStore } from "../store/usePaymentStore";
 import { useProductStore } from "../store/useProductStore";
 import ReactQRCode from "react-qr-code";
 import Swal from "sweetalert2";
-import io from 'socket.io-client';
+import io from "socket.io-client";
 
 // URL de tu servidor WebSocket en Heroku (asegúrate de que el backend esté correctamente configurado)
-const socket = io('https://thepointback-03939a97aeeb.herokuapp.com', {
-  transports: ['websocket'],
+const socket = io("https://thepointback-03939a97aeeb.herokuapp.com", {
+  transports: ["websocket"],
   reconnectionAttempts: 5, // Número de intentos de reconexión
   reconnectionDelay: 3000, // Retraso entre intentos de reconexión
 });
 
 const Home = () => {
   const { createPaymentLink, paymentLink, paymentLoading } = usePaymentStore();
-  const { products, fetchProducts, needsUpdate, setNeedsUpdate } = useProductStore();
+  const { products, fetchProducts, needsUpdate, setNeedsUpdate } =
+    useProductStore();
   const [showQR, setShowQR] = useState(false);
   const [localProducts, setLocalProducts] = useState([]); // Para gestionar cantidades de productos seleccionados
   const [paymentStatus, setPaymentStatus] = useState(null); // Estado del pago
@@ -47,21 +48,21 @@ const Home = () => {
 
   // Conectar al servidor WebSocket y escuchar eventos
   useEffect(() => {
-    socket.on('connect', () => {
-      console.log('Conectado al servidor WebSocket');
+    socket.on("connect", () => {
+      console.log("Conectado al servidor WebSocket");
     });
 
-    socket.on('paymentSuccess', ({ status, paymentId }) => {
+    socket.on("paymentSuccess", ({ status, paymentId }) => {
       handlePaymentResult(status, paymentId); // Usa la función para manejar el resultado del pago
     });
 
-    socket.on('disconnect', () => {
-      console.log('Desconectado del servidor WebSocket');
+    socket.on("disconnect", () => {
+      console.log("Desconectado del servidor WebSocket");
     });
 
     // Limpiar el listener cuando el componente se desmonta
     return () => {
-      socket.off('paymentSuccess');
+      socket.off("paymentSuccess");
       socket.disconnect(); // Desconectar el socket cuando el componente se desmonte
     };
   }, []);
@@ -71,38 +72,28 @@ const Home = () => {
     const selectedProducts = localProducts.filter(
       (product) => product.quantity > 0
     );
-    
+
+    const productDetails = selectedProducts
+      .map((product) => product.name)
+      .join(", ");
+
     setPaymentStatus(status);
     setPaymentId(paymentId);
-  
+
+    // Función para imprimir sin abrir una nueva pestaña y sin mostrar el ticket
     const printTicket = () => {
-      const printWindow = window.open('', '_blank');
-      const productDetails = selectedProducts.map(product => product.name).join(", ");
-      
-      printWindow.document.write(`
-        <html>
-          <head>
-            <title>Ticket de Compra</title>
-            <style>
-              body { font-family: Arial, sans-serif; text-align: center; }
-              .ticket { width: 200px; margin: auto; padding: 10px; border: 1px solid #000; }
-              .ticket p { margin: 5px 0; }
-            </style>
-          </head>
-          <body>
-            <div class="ticket">
-              <h2>Vale por:</h2>
-              <p>${productDetails}</p>
-            </div>
-          </body>
-        </html>
-      `);
-      printWindow.document.close();
-      printWindow.focus();
-      printWindow.print();
-      printWindow.close();
+      const printArea = document.getElementById("printArea"); // Obtener el área de impresión
+      const originalContent = document.body.innerHTML; // Guardar el contenido original
+
+      document.body.innerHTML = printArea.innerHTML; // Reemplazar el contenido visible por el ticket
+      window.print(); // Imprimir
+      document.body.innerHTML = originalContent; // Restaurar el contenido original
     };
-  
+
+    // Primero cerrar el QR
+    setShowQR(false);
+
+    // Luego mostrar el SweetAlert con confirmación y disparar la impresión
     if (status === "approved") {
       Swal.fire({
         title: "¡Pago Exitoso!",
@@ -325,7 +316,11 @@ const Home = () => {
               className="absolute -top-4 -right-4 text-red-500 hover:text-red-700 bg-white rounded-full p-2"
               onClick={handleCloseQR} // Llamar a handleCloseQR para cerrar el modal y resetear los productos
             >
-              <FontAwesomeIcon icon={faTimes} size="xl" className="text-red-500 cursor-pointer transition-transform duration-200 hover:rotate-90" />
+              <FontAwesomeIcon
+                icon={faTimes}
+                size="xl"
+                className="text-red-500 cursor-pointer transition-transform duration-200 hover:rotate-90"
+              />
             </button>
             <div className="flex justify-center items-center w-full">
               <ReactQRCode
@@ -339,10 +334,18 @@ const Home = () => {
       )}
 
       {/* Div oculto para imprimir el ticket */}
-      <div ref={hiddenTicketRef} style={{ display: "none" }}>
-        <div style={{ width: '10cm', height: '10cm', padding: '1cm', border: '1px solid black', textAlign: 'center' }}>
+      <div id="printArea" style={{ display: "none" }}>
+        <div
+          style={{
+            width: "10cm",
+            height: "10cm",
+            padding: "10px",
+            textAlign: "center",
+            border: "1px solid #000",
+          }}
+        >
           <h2>Vale por:</h2>
-          <p><strong>{selectedProducts.map(product => product.name).join(", ")}</strong></p>
+          <p>{selectedProducts.map((product) => product.name).join(", ")}</p>
         </div>
       </div>
     </div>
