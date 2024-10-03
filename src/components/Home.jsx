@@ -23,7 +23,6 @@ const Home = () => {
   const [paymentStatus, setPaymentStatus] = useState(null); // Estado del pago
   const [paymentId, setPaymentId] = useState(null); // ID del pago
   const hiddenTicketRef = useRef(null); // Para acceder al contenido del ticket de forma oculta
-  const [resetKey, setResetKey] = useState(0); // Estado para forzar el re-render del componente
 
   // Obtener productos al cargar el componente
   useEffect(() => {
@@ -100,7 +99,10 @@ const Home = () => {
         timer: 2000, // Se cierra automáticamente en 2 segundos
       }).then(() => {
         handleCloseQR(); // Cerrar QR antes de imprimir
-        setTimeout(printTicket, 1000); // Imprimir ticket después de 1 segundo
+        setTimeout(() => {
+          printTicket(); // Imprimir ticket después de 1 segundo
+          window.location.reload(); // Recargar la página después de imprimir
+        }, 1000);
       });
     } else if (status === "pending") {
       Swal.fire({
@@ -111,7 +113,10 @@ const Home = () => {
         timer: 3000, // Se cierra automáticamente en 3 segundos
       }).then(() => {
         handleCloseQR(); // Cerrar QR antes de imprimir
-        setTimeout(printTicket, 1000); // Imprimir ticket en estado pendiente
+        setTimeout(() => {
+          printTicket(); // Imprimir ticket en estado pendiente
+          window.location.reload(); // Recargar la página después de imprimir
+        }, 1000);
       });
     } else if (status === "failure") {
       Swal.fire({
@@ -122,7 +127,10 @@ const Home = () => {
         timer: 3000, // Se cierra automáticamente en 3 segundos
       }).then(() => {
         handleCloseQR(); // Cerrar QR antes de imprimir
-        setTimeout(printTicket, 1000); // Imprimir ticket en estado fallido
+        setTimeout(() => {
+          printTicket(); // Imprimir ticket en estado fallido
+          window.location.reload(); // Recargar la página después de imprimir
+        }, 1000);
       });
     }
   };
@@ -130,7 +138,6 @@ const Home = () => {
   // Función para cerrar el modal del QR y resetear productos
   const handleCloseQR = () => {
     setShowQR(false); // Cerrar el modal del QR
-    setResetKey((prevKey) => prevKey + 1); // Forzar re-render cambiando el key del componente
   };
 
   // Función que resetea todo: productos, estado del pago y QR
@@ -202,7 +209,7 @@ const Home = () => {
   };
 
   return (
-    <div key={resetKey} className="relative min-h-screen bg-gray-100 flex flex-col items-center py-10 bg-gray-300">
+    <div className="relative min-h-screen bg-gray-100 flex flex-col items-center py-10 bg-gray-300">
       {/* Si se muestra el QR, difumina el contenido detrás */}
       <div className="mb-8 w-full max-w-5xl mx-auto px-4 lg:px-0">
         <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-400 py-3 px-6 rounded-lg inline-block">
