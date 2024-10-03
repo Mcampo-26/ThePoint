@@ -12,11 +12,6 @@ function App() {
 
         {/* Ruta para el panel de administración */}
         <Route path="/admin" element={<AdminPanel />} />
-
-        {/* Rutas para los resultados de pago, todas usando el componente Home */}
-        <Route path="/payment-result/success" element={<Home />} />
-        <Route path="/payment-result/failure" element={<Home />} />
-        <Route path="/payment-result/pending" element={<Home />} />
       </Routes>
     </Router>
   );
