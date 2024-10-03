@@ -67,95 +67,82 @@ const Home = () => {
     };
   }, []);
 
-  // Función para manejar el estado del pago
-  // Función para manejar el resultado del pago y resetear productos
+  // Función para manejar el estado del pago y resetear productos
+  const handlePaymentResult = (status, paymentId) => {
+    const selectedProducts = localProducts.filter(
+      (product) => product.quantity > 0
+    );
 
-  
-  
+    setPaymentStatus(status);
+    setPaymentId(paymentId);
 
-// Función para manejar el resultado del pago y resetear productos
-// Función para manejar el resultado del pago y resetear productos
-const handlePaymentResult = (status, paymentId) => {
-  const selectedProducts = localProducts.filter(
-    (product) => product.quantity > 0
-  );
+    // Función para imprimir el ticket
+    const printTicket = () => {
+      const printArea = document.getElementById("printArea");
+      const originalContent = document.body.innerHTML;
 
-  setPaymentStatus(status);
-  setPaymentId(paymentId);
+      document.body.innerHTML = printArea.innerHTML;
+      window.print();
+      document.body.innerHTML = originalContent;
 
-  // Función para imprimir el ticket
-  const printTicket = () => {
-    const printArea = document.getElementById("printArea");
-    const originalContent = document.body.innerHTML;
+      // Reseteamos productos y cerramos el QR
+      resetAll();
+    };
 
-    document.body.innerHTML = printArea.innerHTML;
-    window.print();
-    document.body.innerHTML = originalContent;
-
-    // Reseteamos productos y cerramos el QR
-    resetAll();
+    // Mostrar el SweetAlert según el estado del pago
+    if (status === "approved") {
+      Swal.fire({
+        title: "¡Pago Exitoso!",
+        text: "Gracias por tu compra.",
+        icon: "success",
+        showConfirmButton: false, // Sin botón de confirmación
+        timer: 2000, // Se cierra automáticamente en 2 segundos
+      }).then(() => {
+        handleCloseQR(); // Cerrar QR antes de imprimir
+        setTimeout(printTicket, 1000); // Imprimir ticket después de 1 segundo
+      });
+    } else if (status === "pending") {
+      Swal.fire({
+        title: "Pago Pendiente",
+        text: "Tu pago está pendiente de confirmación.",
+        icon: "info",
+        showConfirmButton: false, // Sin botón de confirmación
+        timer: 3000, // Se cierra automáticamente en 3 segundos
+      }).then(() => {
+        handleCloseQR(); // Cerrar QR antes de imprimir
+        setTimeout(printTicket, 1000); // Imprimir ticket en estado pendiente
+      });
+    } else if (status === "failure") {
+      Swal.fire({
+        title: "Pago Rechazado",
+        text: "Tu pago no pudo ser procesado.",
+        icon: "error",
+        showConfirmButton: false, // Sin botón de confirmación
+        timer: 3000, // Se cierra automáticamente en 3 segundos
+      }).then(() => {
+        handleCloseQR(); // Cerrar QR antes de imprimir
+        setTimeout(printTicket, 1000); // Imprimir ticket en estado fallido
+      });
+    }
   };
 
-  // Mostrar el SweetAlert según el estado del pago
-  if (status === "approved") {
-    Swal.fire({
-      title: "¡Pago Exitoso!",
-      text: "Gracias por tu compra.",
-      icon: "success",
-      showConfirmButton: false, // Sin botón de confirmación
-      timer: 2000, // Se cierra automáticamente en 3 segundos
-    }).then(() => {
-      handleCloseQR(); // Cerrar QR antes de imprimir
-      setTimeout(printTicket, 1000); // Imprimir ticket después de 1 segundo
-    });
-  } else if (status === "pending") {
-    Swal.fire({
-      title: "Pago Pendiente",
-      text: "Tu pago está pendiente de confirmación.",
-      icon: "info",
-      showConfirmButton: false, // Sin botón de confirmación
-      timer: 3000, // Se cierra automáticamente en 3 segundos
-    }).then(() => {
-      handleCloseQR(); // Cerrar QR antes de imprimir
-      setTimeout(printTicket, 1000); // Imprimir ticket en estado pendiente
-    });
-  } else if (status === "failure") {
-    Swal.fire({
-      title: "Pago Rechazado",
-      text: "Tu pago no pudo ser procesado.",
-      icon: "error",
-      showConfirmButton: false, // Sin botón de confirmación
-      timer: 3000, // Se cierra automáticamente en 3 segundos
-    }).then(() => {
-      handleCloseQR(); // Cerrar QR antes de imprimir
-      setTimeout(printTicket, 1000); // Imprimir ticket en estado fallido
-    });
-  }
-};
+  // Función para cerrar el modal del QR y poner en cero los productos y el resumen de compra
+  const handleCloseQR = () => {
+    setShowQR(false); // Cerrar el modal del QR
+    resetAll(); // Reseteamos los productos y el estado del pago
+  };
 
-// Función para cerrar el modal del QR y poner en cero los productos y el resumen de compra
-const handleCloseQR = () => {
-  setShowQR(false); // Cerrar el modal del QR
-  resetAll(); // Reseteamos los productos y el estado del pago
-};
-
-// Función que resetea todo: productos, estado del pago y QR
-const resetAll = () => {
-  setLocalProducts((prevProducts) =>
-    prevProducts.map((product) => ({
-      ...product,
-      quantity: 0, // Resetea la cantidad de todos los productos
-    }))
-  );
-  setPaymentStatus(null); // Resetea el estado del pago
-  setPaymentId(null); // Resetea el ID de la orden
-  fetchProducts(); // Volver a cargar los productos desde el servidor o el estado global
-};
-
-
-
-  
-  
+  // Función que resetea todo: productos, estado del pago y QR
+  const resetAll = () => {
+    setLocalProducts((prevProducts) =>
+      prevProducts.map((product) => ({
+        ...product,
+        quantity: 0, // Resetea la cantidad de todos los productos
+      }))
+    );
+    setPaymentStatus(null); // Resetea el estado del pago
+    setPaymentId(null); // Resetea el ID de la orden
+  };
 
   const incrementQuantity = (id) => {
     setLocalProducts(
@@ -182,16 +169,6 @@ const resetAll = () => {
       localProducts.map((product) =>
         product._id === id ? { ...product, quantity: 0 } : product
       )
-    );
-  };
-
-  // Función para poner en cero todos los productos
-  const resetProducts = () => {
-    setLocalProducts(
-      localProducts.map((product) => ({
-        ...product,
-        quantity: 0,
-      }))
     );
   };
 
@@ -222,9 +199,6 @@ const resetAll = () => {
       console.error("Error al generar el enlace de pago:", error);
     }
   };
-
-  // Función para cerrar el modal del QR y poner en cero los productos
-
 
   return (
     <div className="relative min-h-screen bg-gray-100 flex flex-col items-center py-10 bg-gray-300">
@@ -402,7 +376,6 @@ const resetAll = () => {
           </h2>
         </div>
       </div>
-
     </div>
   );
 };
