@@ -70,21 +70,11 @@ const Home = () => {
   // Función para manejar el estado del pago
   // Función para manejar el resultado del pago y resetear productos
 
-  const resetAll = () => {
-    setLocalProducts((prevProducts) => 
-      prevProducts.map((product) => ({
-        ...product,
-        quantity: 0, // Resetea la cantidad de todos los productos
-      }))
-    );
-    setPaymentStatus(null); // Resetea el estado del pago
-    setPaymentId(null); // Resetea el ID de la orden
-    setShowQR(false); // Cierra el modal del QR
-  };
+  c
   
   
-  // Función para manejar el resultado del pago y resetear productos
-  // Función para manejar el resultado del pago y resetear productos
+
+// Función para manejar el resultado del pago y resetear productos
 const handlePaymentResult = (status, paymentId) => {
   const selectedProducts = localProducts.filter(
     (product) => product.quantity > 0
@@ -123,7 +113,10 @@ const handlePaymentResult = (status, paymentId) => {
       showConfirmButton: false, // Sin botón de confirmación
       timer: 3000, // Se cierra automáticamente en 3 segundos
     }).then(() => {
-      setTimeout(printTicket, 3000); // Imprimir ticket después de 3 segundos
+      setTimeout(() => {
+        printTicket(); // Imprimir ticket después de SweetAlert
+        handleCloseQR(); // Cerrar QR y resetear productos
+      }, 3000); // Esperamos 3 segundos antes de imprimir y cerrar
     });
   } else if (status === "pending") {
     Swal.fire({
@@ -133,7 +126,10 @@ const handlePaymentResult = (status, paymentId) => {
       showConfirmButton: false, // Sin botón de confirmación
       timer: 3000, // Se cierra automáticamente en 3 segundos
     }).then(() => {
-      setTimeout(printTicket, 3000); // Imprimir ticket en estado pendiente
+      setTimeout(() => {
+        printTicket(); // Imprimir ticket en estado pendiente
+        handleCloseQR(); // Cerrar QR y resetear productos
+      }, 3000); // Esperamos 3 segundos antes de imprimir y cerrar
     });
   } else if (status === "failure") {
     Swal.fire({
@@ -143,15 +139,32 @@ const handlePaymentResult = (status, paymentId) => {
       showConfirmButton: false, // Sin botón de confirmación
       timer: 3000, // Se cierra automáticamente en 3 segundos
     }).then(() => {
-      setTimeout(printTicket, 3000); // Imprimir ticket en estado fallido
+      setTimeout(() => {
+        printTicket(); // Imprimir ticket en estado fallido
+        handleCloseQR(); // Cerrar QR y resetear productos
+      }, 3000); // Esperamos 3 segundos antes de imprimir y cerrar
     });
   }
 };
 
-// Función para cerrar el modal del QR y poner en cero los productos
+// Función para cerrar el modal del QR y poner en cero los productos y el resumen de compra
 const handleCloseQR = () => {
   resetAll(); // Poner en cero todos los productos y resetear la orden
 };
+
+// Función que resetea todo: productos, estado del pago y QR
+const resetAll = () => {
+  setLocalProducts((prevProducts) =>
+    prevProducts.map((product) => ({
+      ...product,
+      quantity: 0, // Resetea la cantidad de todos los productos
+    }))
+  );
+  setPaymentStatus(null); // Resetea el estado del pago
+  setPaymentId(null); // Resetea el ID de la orden
+  setShowQR(false); // Cierra el modal del QR
+};
+
 
   
   
@@ -380,13 +393,13 @@ const handleCloseQR = () => {
           <h2
             style={{
               fontSize: "30px",
-              marginTop: "-18px", // Reduce el margen superior para subir el contenido
-              marginBottom: "6px", // También ajusta el margen inferior para no dejar espacio extra
+              marginTop: "-25x", // Reduce el margen superior para subir el contenido
+              marginBottom: "5px", // También ajusta el margen inferior para no dejar espacio extra
             }}
           >
             Vale por
           </h2>
-          <p style={{ fontSize: "65px", marginleft: "5px" }}>
+          <p style={{ fontSize: "68px", marginleft: "5px" }}>
             {products.length > 0
               ? products[0].name.replace(/[0-9]/g, "")
               : "Producto no disponible"}
