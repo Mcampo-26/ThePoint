@@ -1,27 +1,31 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
-const Ticket = ({ status, productName, totalAmount, paymentId }) => {
+const Ticket = ({ productName }) => {
+  // Estilos en línea para el ticket
+  const ticketStyle = {
+    width: '10cm',
+    height: '10cm',
+    padding: '1cm',
+    border: '1px solid black',
+    margin: '0 auto',
+    textAlign: 'center',
+    fontFamily: 'Arial, sans-serif',
+    fontSize: '12px',
+  };
+
+  useEffect(() => {
+    // Disparar la impresión automáticamente cuando el componente se monta
+    const timeoutId = setTimeout(() => {
+      window.print();
+    }, 500); // Añadir un retraso para asegurarse de que el contenido está cargado
+
+    return () => clearTimeout(timeoutId); // Limpiar el timeout cuando el componente se desmonte
+  }, []);
+
   return (
-    <div
-      style={{
-        width: '10cm',
-        height: '10cm',
-        padding: '10px',
-        border: '1px solid #000',
-        fontSize: '12px', // Ajustar tamaño de fuente
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
-      }}
-    >
-      <h2 style={{ margin: '0 0 10px 0', fontSize: '16px' }}>Resumen del Ticket</h2>
-      <div style={{ textAlign: 'center' }}>
-        <p><strong>Vale por:</strong> {productName}</p>
-        <p><strong>Total Pagado:</strong> ${totalAmount}</p>
-        <p><strong>ID de Pago:</strong> {paymentId}</p>
-        <p><strong>Estado del Pago:</strong> {status === "approved" ? "Aprobado" : status === "pending" ? "Pendiente" : "Rechazado"}</p>
-      </div>
+    <div style={ticketStyle}>
+      <h2>Vale por:</h2>
+      <p><strong>{productName}</strong></p>
     </div>
   );
 };

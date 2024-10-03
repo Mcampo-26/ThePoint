@@ -18,12 +18,11 @@ const socket = io('https://thepointback-03939a97aeeb.herokuapp.com', {
 const Home = () => {
   const { createPaymentLink, paymentLink, paymentLoading } = usePaymentStore();
   const { products, fetchProducts, needsUpdate, setNeedsUpdate } = useProductStore();
-  const [showQR, setShowQR] = useState(false);
+  const [showQR, setShowQR] = useState(false); // Mostrar u ocultar el QR
   const [localProducts, setLocalProducts] = useState([]); // Para gestionar cantidades de productos seleccionados
-  const [showTicket, setShowTicket] = useState(false); // Para mostrar el ticket después del pago
+  const [showTicket, setShowTicket] = useState(false); // Mostrar el ticket después del pago
   const [paymentStatus, setPaymentStatus] = useState(null); // Estado del pago
   const [paymentId, setPaymentId] = useState(null); // ID del pago
-  const [showPrintButton, setShowPrintButton] = useState(false); // Controlar el renderizado del botón de imprimir
 
   // Obtener productos al cargar el componente
   useEffect(() => {
@@ -78,6 +77,9 @@ const Home = () => {
     setPaymentId(paymentId);
     setShowTicket(true); // Mostrar el ticket
   
+    // Cerrar el modal del QR automáticamente antes del SweetAlert
+    setShowQR(false);
+  
     const printTicket = () => {
       setTimeout(() => {
         window.print(); // Llamar a la impresión automáticamente
@@ -113,7 +115,6 @@ const Home = () => {
       });
     }
   };
-  
 
   const incrementQuantity = (id) => {
     setLocalProducts(
@@ -175,7 +176,7 @@ const Home = () => {
     const productName = "La Previa";
     try {
       await createPaymentLink(productName, totalAmount);
-      setShowQR(true);
+      setShowQR(true); // Mostrar QR cuando se genera el enlace de pago
     } catch (error) {
       console.error("Error al generar el enlace de pago:", error);
     }
@@ -185,11 +186,6 @@ const Home = () => {
   const handleCloseQR = () => {
     setShowQR(false);
     resetProducts(); // Poner en cero todos los productos
-  };
-
-  // Función para manejar la impresión del ticket
-  const handlePrint = () => {
-    window.print();
   };
 
   return (
