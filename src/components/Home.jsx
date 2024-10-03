@@ -68,38 +68,48 @@ const Home = () => {
   }, []);
 
   // Función para manejar el estado del pago
+  // Función para manejar el resultado del pago y resetear productos
+
+  const resetAll = () => {
+    setLocalProducts((prevProducts) => 
+      prevProducts.map((product) => ({
+        ...product,
+        quantity: 0, // Resetea la cantidad de todos los productos
+      }))
+    );
+    setPaymentStatus(null); // Resetea el estado del pago
+    setPaymentId(null); // Resetea el ID de la orden
+    setShowQR(false); // Cierra el modal del QR
+  };
+  
+  
+  // Función para manejar el resultado del pago y resetear productos
   const handlePaymentResult = (status, paymentId) => {
     const selectedProducts = localProducts.filter(
       (product) => product.quantity > 0
     );
-  
-    const productDetails = selectedProducts
-      .map((product) => product.name)
-      .join(", ");
   
     setPaymentStatus(status);
     setPaymentId(paymentId);
   
     // Función para imprimir el ticket
     const printTicket = () => {
-      const printArea = document.getElementById("printArea"); // Obtener el área de impresión
-      const originalContent = document.body.innerHTML; // Guardar el contenido original
+      const printArea = document.getElementById("printArea");
+      const originalContent = document.body.innerHTML;
   
-      document.body.innerHTML = printArea.innerHTML; // Reemplazar el contenido visible por el ticket
-      window.print(); // Imprimir
-      document.body.innerHTML = originalContent; // Restaurar el contenido original
+      document.body.innerHTML = printArea.innerHTML;
+      window.print();
+      document.body.innerHTML = originalContent;
   
+      // Mostrar el mensaje después de la impresión
       Swal.fire({
         title: "Gracias por tu compra!",
         text: "Se ha completado exitosamente.",
         icon: "success",
       }).then(() => {
-        resetProducts(); // Poner en cero todos los productos después de la impresión
+        resetAll(); // Aquí reseteamos todo después del mensaje
       });
     };
-  
-    // Primero cerrar el QR
-    setShowQR(false);
   
     // Mostrar el SweetAlert según el estado del pago
     if (status === "approved") {
@@ -131,6 +141,13 @@ const Home = () => {
       });
     }
   };
+  
+  // Función para cerrar el modal del QR y poner en cero los productos
+  const handleCloseQR = () => {
+    setShowQR(false);
+    resetAll(); // Poner en cero todos los productos y resetear la orden
+  };
+  
   
 
   const incrementQuantity = (id) => {
@@ -200,10 +217,7 @@ const Home = () => {
   };
 
   // Función para cerrar el modal del QR y poner en cero los productos
-  const handleCloseQR = () => {
-    setShowQR(false);
-    resetProducts(); // Poner en cero todos los productos
-  };
+
 
   return (
     <div className="relative min-h-screen bg-gray-100 flex flex-col items-center py-10 bg-gray-300">
@@ -346,16 +360,17 @@ const Home = () => {
       <div id="printArea" style={{ display: "none" }}>
   <div
     style={{
-      width: "5cm", // Ajusta el ancho a 5 cm
-      height: "5cm", // Ajusta la altura a 5 cm
+      width: "8cm", // Ajusta el ancho a 5 cm
+      height: "8cm", // Ajusta la altura a 5 cm
       padding: "5px", // Mantén un pequeño padding
       textAlign: "center",
-      fontSize: "18px", // Aumenta el tamaño de la fuente
+      fontSize: "25px", // Aumenta el tamaño de la fuente
       border: "1px solid #000", // Mantén el borde para referencia visual
     }}
   >
-    <h2 style={{ fontSize: "20px", marginBottom: "5px" }}>Vale por:</h2> {/* Título con fuente más grande */}
-    <p style={{ fontSize: "18px" }}>
+    <h2 style={{ fontSize: "25px", marginBottom: "5px" }}>Vale por:</h2> {/* Título con fuente más grande */}
+    <p style={{ fontSize: "30px" }}>
+    <h2 style={{ fontSize: "25px", marginBottom: "5px" }}>Gracias por tu compra</h2>      
       {selectedProducts.map((product) => product.name).join(", ")}
     </p>
   </div>
