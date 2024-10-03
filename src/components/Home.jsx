@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash, faTimes } from "@fortawesome/free-solid-svg-icons";
 import { usePaymentStore } from "../store/usePaymentStore";
 import { useProductStore } from "../store/useProductStore";
 import ReactQRCode from "react-qr-code";
 import Swal from "sweetalert2";
-import Ticket from "./Ticket";
 import io from 'socket.io-client';
 
 // URL de tu servidor WebSocket en Heroku (asegúrate de que el backend esté correctamente configurado)
@@ -18,11 +17,11 @@ const socket = io('https://thepointback-03939a97aeeb.herokuapp.com', {
 const Home = () => {
   const { createPaymentLink, paymentLink, paymentLoading } = usePaymentStore();
   const { products, fetchProducts, needsUpdate, setNeedsUpdate } = useProductStore();
-  const [showQR, setShowQR] = useState(false); // Mostrar u ocultar el QR
+  const [showQR, setShowQR] = useState(false);
   const [localProducts, setLocalProducts] = useState([]); // Para gestionar cantidades de productos seleccionados
-  const [showTicket, setShowTicket] = useState(false); // Mostrar el ticket después del pago
   const [paymentStatus, setPaymentStatus] = useState(null); // Estado del pago
   const [paymentId, setPaymentId] = useState(null); // ID del pago
+  const hiddenTicketRef = useRef(null); // Para acceder al contenido del ticket de forma oculta
 
   // Obtener productos al cargar el componente
   useEffect(() => {
@@ -72,18 +71,36 @@ const Home = () => {
     const selectedProducts = localProducts.filter(
       (product) => product.quantity > 0
     );
-  
+    
     setPaymentStatus(status);
     setPaymentId(paymentId);
-    setShowTicket(true); // Mostrar el ticket
-  
-    // Cerrar el modal del QR automáticamente antes del SweetAlert
-    setShowQR(false);
   
     const printTicket = () => {
-      setTimeout(() => {
-        window.print(); // Llamar a la impresión automáticamente
-      }, 500);
+      const printWindow = window.open('', '_blank');
+      const productDetails = selectedProducts.map(product => product.name).join(", ");
+      
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Ticket de Compra</title>
+            <style>
+              body { font-family: Arial, sans-serif; text-align: center; }
+              .ticket { width: 200px; margin: auto; padding: 10px; border: 1px solid #000; }
+              .ticket p { margin: 5px 0; }
+            </style>
+          </head>
+          <body>
+            <div class="ticket">
+              <h2>Vale por:</h2>
+              <p>${productDetails}</p>
+            </div>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.focus();
+      printWindow.print();
+      printWindow.close();
     };
   
     if (status === "approved") {
@@ -176,7 +193,7 @@ const Home = () => {
     const productName = "La Previa";
     try {
       await createPaymentLink(productName, totalAmount);
-      setShowQR(true); // Mostrar QR cuando se genera el enlace de pago
+      setShowQR(true);
     } catch (error) {
       console.error("Error al generar el enlace de pago:", error);
     }
@@ -321,12 +338,13 @@ const Home = () => {
         </div>
       )}
 
-      {/* Mostrar el ticket si el pago se completó, está pendiente o falló */}
-      {showTicket && (
-      <Ticket 
-        productName={selectedProducts.map(product => product.name).join(", ")} 
-      />
-    )}
+      {/* Div oculto para imprimir el ticket */}
+      <div ref={hiddenTicketRef} style={{ display: "none" }}>
+        <div style={{ width: '10cm', height: '10cm', padding: '1cm', border: '1px solid black', textAlign: 'center' }}>
+          <h2>Vale por:</h2>
+          <p><strong>{selectedProducts.map(product => product.name).join(", ")}</strong></p>
+        </div>
+      </div>
     </div>
   );
 };
