@@ -5,20 +5,25 @@ import { usePaymentStore } from "../store/usePaymentStore";
 import { useProductStore } from "../store/useProductStore";
 import ReactQRCode from "react-qr-code";
 import Swal from "sweetalert2";
-import { useLocation, useNavigate } from "react-router-dom";
 import Ticket from "./Ticket";
+import io from 'socket.io-client';
+
+// URL de tu servidor WebSocket en Heroku (asegúrate de que el backend esté correctamente configurado)
+const socket = io('https://thepointback-03939a97aeeb.herokuapp.com', {
+  transports: ['websocket'],
+  reconnectionAttempts: 5, // Número de intentos de reconexión
+  reconnectionDelay: 3000, // Retraso entre intentos de reconexión
+});
 
 const Home = () => {
   const { createPaymentLink, paymentLink, paymentLoading } = usePaymentStore();
-  const { products, fetchProducts, needsUpdate, setNeedsUpdate } =
-    useProductStore();
+  const { products, fetchProducts, needsUpdate, setNeedsUpdate } = useProductStore();
   const [showQR, setShowQR] = useState(false);
   const [localProducts, setLocalProducts] = useState([]); // Para gestionar cantidades de productos seleccionados
   const [showTicket, setShowTicket] = useState(false); // Para mostrar el ticket después del pago
   const [paymentStatus, setPaymentStatus] = useState(null); // Estado del pago
   const [paymentId, setPaymentId] = useState(null); // ID del pago
-  const location = useLocation(); // Para obtener los parámetros de la URL
-  const navigate = useNavigate(); // Para redirigir después de los pagos
+  const [showPrintButton, setShowPrintButton] = useState(false); // Controlar el renderizado del botón de imprimir
 
   // Obtener productos al cargar el componente
   useEffect(() => {
@@ -42,33 +47,41 @@ const Home = () => {
     setLocalProducts(initializedProducts);
   }, [products]);
 
-  // Verificar el estado del pago al cargar el componente
+  // Conectar al servidor WebSocket y escuchar eventos
   useEffect(() => {
-    const queryParams = new URLSearchParams(location.search);
-    const status = queryParams.get("status");
-    const paymentId = queryParams.get("payment_id");
+    socket.on('connect', () => {
+      console.log('Conectado al servidor WebSocket');
+    });
 
-    // Log para verificar los parámetros de la URL que envía Mercado Pago
-    console.log('Parámetros de la URL:', queryParams.toString());
-    console.log('Estado del pago recibido:', status);
+    socket.on('paymentSuccess', ({ status, paymentId }) => {
+      handlePaymentResult(status, paymentId); // Usa la función para manejar el resultado del pago
+    });
 
+    socket.on('disconnect', () => {
+      console.log('Desconectado del servidor WebSocket');
+    });
+
+    // Limpiar el listener cuando el componente se desmonta
+    return () => {
+      socket.off('paymentSuccess');
+      socket.disconnect(); // Desconectar el socket cuando el componente se desmonte
+    };
+  }, []);
+
+  // Función para manejar el estado del pago
+  const handlePaymentResult = (status, paymentId) => {
+    setPaymentStatus(status);
+    setPaymentId(paymentId);
+    setShowTicket(true); // Mostrar el ticket
     if (status === "approved") {
-      setPaymentStatus("approved");
-      setPaymentId(paymentId);
-      setShowTicket(true); // Mostrar el ticket cuando el pago sea exitoso
+      setShowPrintButton(true);
       Swal.fire({
         title: "¡Pago Exitoso!",
         text: "Gracias por tu compra.",
         icon: "success",
         confirmButtonText: "OK",
-      }).then(() => {
-        // Ejecuta la impresión automática después de que el usuario haga clic en OK
-        window.print();
       });
     } else if (status === "pending") {
-      setPaymentStatus("pending");
-      setPaymentId(paymentId);
-      setShowTicket(true); // Mostrar el ticket si el pago está pendiente
       Swal.fire({
         title: "Pago Pendiente",
         text: "Tu pago está pendiente de confirmación.",
@@ -76,9 +89,6 @@ const Home = () => {
         confirmButtonText: "OK",
       });
     } else if (status === "failure") {
-      setPaymentStatus("failure");
-      setPaymentId(paymentId);
-      setShowTicket(true); // Mostrar el ticket si el pago falló
       Swal.fire({
         title: "Pago Rechazado",
         text: "Tu pago no pudo ser procesado.",
@@ -86,7 +96,7 @@ const Home = () => {
         confirmButtonText: "OK",
       });
     }
-  }, [location, navigate]);
+  };
 
   const incrementQuantity = (id) => {
     setLocalProducts(
@@ -158,6 +168,11 @@ const Home = () => {
   const handleCloseQR = () => {
     setShowQR(false);
     resetProducts(); // Poner en cero todos los productos
+  };
+
+  // Función para manejar la impresión del ticket
+  const handlePrint = () => {
+    window.print();
   };
 
   return (
@@ -295,12 +310,25 @@ const Home = () => {
 
       {/* Mostrar el ticket si el pago se completó, está pendiente o falló */}
       {showTicket && (
-        <Ticket 
-          status={paymentStatus} 
-          productName="La Previa" 
-          totalAmount={totalAmount} 
-          paymentId={paymentId} 
-        />
+        <>
+          <Ticket 
+            status={paymentStatus} 
+            productName="La Previa" 
+            totalAmount={totalAmount} 
+            paymentId={paymentId} 
+          />
+          {/* Renderizar el botón de imprimir solo si el pago fue aprobado */}
+          {showPrintButton && (
+            <div className="mt-4">
+              <button
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-blue-700 transition duration-300"
+                onClick={handlePrint}
+              >
+                Imprimir Ticket
+              </button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
