@@ -70,16 +70,28 @@ const Home = () => {
 
   // Función para manejar el estado del pago
   const handlePaymentResult = (status, paymentId) => {
+    const selectedProducts = localProducts.filter(
+      (product) => product.quantity > 0
+    );
+  
     setPaymentStatus(status);
     setPaymentId(paymentId);
     setShowTicket(true); // Mostrar el ticket
+  
+    const printTicket = () => {
+      setTimeout(() => {
+        window.print(); // Llamar a la impresión automáticamente
+      }, 500);
+    };
+  
     if (status === "approved") {
-      setShowPrintButton(true);
       Swal.fire({
         title: "¡Pago Exitoso!",
         text: "Gracias por tu compra.",
         icon: "success",
         confirmButtonText: "OK",
+      }).then(() => {
+        printTicket(); // Imprimir ticket después de SweetAlert
       });
     } else if (status === "pending") {
       Swal.fire({
@@ -87,6 +99,8 @@ const Home = () => {
         text: "Tu pago está pendiente de confirmación.",
         icon: "info",
         confirmButtonText: "OK",
+      }).then(() => {
+        printTicket(); // Imprimir ticket en estado pendiente
       });
     } else if (status === "failure") {
       Swal.fire({
@@ -94,9 +108,12 @@ const Home = () => {
         text: "Tu pago no pudo ser procesado.",
         icon: "error",
         confirmButtonText: "OK",
+      }).then(() => {
+        printTicket(); // Imprimir ticket en estado fallido
       });
     }
   };
+  
 
   const incrementQuantity = (id) => {
     setLocalProducts(
@@ -310,26 +327,10 @@ const Home = () => {
 
       {/* Mostrar el ticket si el pago se completó, está pendiente o falló */}
       {showTicket && (
-        <>
-          <Ticket 
-            status={paymentStatus} 
-            productName="La Previa" 
-            totalAmount={totalAmount} 
-            paymentId={paymentId} 
-          />
-          {/* Renderizar el botón de imprimir solo si el pago fue aprobado */}
-          {showPrintButton && (
-            <div className="mt-4">
-              <button
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-blue-700 transition duration-300"
-                onClick={handlePrint}
-              >
-                Imprimir Ticket
-              </button>
-            </div>
-          )}
-        </>
-      )}
+      <Ticket 
+        productName={selectedProducts.map(product => product.name).join(", ")} 
+      />
+    )}
     </div>
   );
 };
