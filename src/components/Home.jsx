@@ -75,6 +75,7 @@ const Home = () => {
   
 
 // Función para manejar el resultado del pago y resetear productos
+// Función para manejar el resultado del pago y resetear productos
 const handlePaymentResult = (status, paymentId) => {
   const selectedProducts = localProducts.filter(
     (product) => product.quantity > 0
@@ -92,16 +93,8 @@ const handlePaymentResult = (status, paymentId) => {
     window.print();
     document.body.innerHTML = originalContent;
 
-    // Mostrar el mensaje después de la impresión
-    Swal.fire({
-      title: "Gracias por tu compra!",
-      text: "Se ha completado exitosamente.",
-      icon: "success",
-      showConfirmButton: false, // No mostramos el botón de confirmación
-      timer: 3000, // El SweetAlert se cierra automáticamente en 3 segundos
-    }).then(() => {
-      resetAll(); // Aquí reseteamos todo después del mensaje
-    });
+    // Reseteamos productos y cerramos el QR
+    resetAll();
   };
 
   // Mostrar el SweetAlert según el estado del pago
@@ -111,12 +104,10 @@ const handlePaymentResult = (status, paymentId) => {
       text: "Gracias por tu compra.",
       icon: "success",
       showConfirmButton: false, // Sin botón de confirmación
-      timer: 3000, // Se cierra automáticamente en 3 segundos
+      timer: 2000, // Se cierra automáticamente en 3 segundos
     }).then(() => {
-      setTimeout(() => {
-        printTicket(); // Imprimir ticket después de SweetAlert
-        handleCloseQR(); // Cerrar QR y resetear productos
-      }, 3000); // Esperamos 3 segundos antes de imprimir y cerrar
+      handleCloseQR(); // Cerrar QR antes de imprimir
+      setTimeout(printTicket, 1000); // Imprimir ticket después de 1 segundo
     });
   } else if (status === "pending") {
     Swal.fire({
@@ -126,10 +117,8 @@ const handlePaymentResult = (status, paymentId) => {
       showConfirmButton: false, // Sin botón de confirmación
       timer: 3000, // Se cierra automáticamente en 3 segundos
     }).then(() => {
-      setTimeout(() => {
-        printTicket(); // Imprimir ticket en estado pendiente
-        handleCloseQR(); // Cerrar QR y resetear productos
-      }, 3000); // Esperamos 3 segundos antes de imprimir y cerrar
+      handleCloseQR(); // Cerrar QR antes de imprimir
+      setTimeout(printTicket, 1000); // Imprimir ticket en estado pendiente
     });
   } else if (status === "failure") {
     Swal.fire({
@@ -139,17 +128,16 @@ const handlePaymentResult = (status, paymentId) => {
       showConfirmButton: false, // Sin botón de confirmación
       timer: 3000, // Se cierra automáticamente en 3 segundos
     }).then(() => {
-      setTimeout(() => {
-        printTicket(); // Imprimir ticket en estado fallido
-        handleCloseQR(); // Cerrar QR y resetear productos
-      }, 3000); // Esperamos 3 segundos antes de imprimir y cerrar
+      handleCloseQR(); // Cerrar QR antes de imprimir
+      setTimeout(printTicket, 1000); // Imprimir ticket en estado fallido
     });
   }
 };
 
 // Función para cerrar el modal del QR y poner en cero los productos y el resumen de compra
 const handleCloseQR = () => {
-  resetAll(); // Poner en cero todos los productos y resetear la orden
+  setShowQR(false); // Cerrar el modal del QR
+  resetAll(); // Reseteamos los productos y el estado del pago
 };
 
 // Función que resetea todo: productos, estado del pago y QR
@@ -162,8 +150,8 @@ const resetAll = () => {
   );
   setPaymentStatus(null); // Resetea el estado del pago
   setPaymentId(null); // Resetea el ID de la orden
-  setShowQR(false); // Cierra el modal del QR
 };
+
 
 
   
