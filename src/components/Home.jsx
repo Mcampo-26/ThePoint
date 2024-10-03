@@ -358,23 +358,43 @@ const Home = () => {
 
       {/* Div oculto para imprimir el ticket */}
       <div id="printArea" style={{ display: "none" }}>
-  <div
-    style={{
-      width: "8cm", // Ajusta el ancho a 5 cm
-      height: "8cm", // Ajusta la altura a 5 cm
-      padding: "5px", // Mantén un pequeño padding
-      textAlign: "center",
-      fontSize: "25px", // Aumenta el tamaño de la fuente
-      border: "1px solid #000", // Mantén el borde para referencia visual
-    }}
-  >
-    <h2 style={{ fontSize: "25px", marginBottom: "5px" }}>Vale por:</h2> {/* Título con fuente más grande */}
-    <p style={{ fontSize: "30px" }}>
-    <h2 style={{ fontSize: "25px", marginBottom: "5px" }}>Gracias por tu compra</h2>      
-      {selectedProducts.map((product) => product.name).join(", ")}
-    </p>
-  </div>
-</div>
+        <div
+          style={{
+            width: "9cm",
+            height: "9cm",
+            margin: "0 auto", // Centramos horizontalmente
+            position: "relative", // Permite ajustar con left
+            left: "-1cm", // Mueve el contenido hacia la izquierda
+            padding: "0",
+            textAlign: "center",
+            fontSize: "90px",
+          }}
+        >
+          {/* Ajusta marginTop para subir todo el contenido */}
+          <h2
+            style={{
+              fontSize: "30px",
+              marginTop: "-18px", // Reduce el margen superior para subir el contenido
+              marginBottom: "6px", // También ajusta el margen inferior para no dejar espacio extra
+            }}
+          >
+            Vale por
+          </h2>
+          <p style={{ fontSize: "55px", marginleft: "5px" }}>
+            {products.length > 0
+              ? products[0].name.replace(/[0-9]/g, "")
+              : "Producto no disponible"}
+          </p>
+          <h2
+            style={{
+              fontSize: "10px",
+             
+            }}
+          >
+            gracias por tu compra..
+          </h2>
+        </div>
+      </div>
 
     </div>
   );
