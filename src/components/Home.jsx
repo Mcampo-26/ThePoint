@@ -72,28 +72,36 @@ const Home = () => {
     const selectedProducts = localProducts.filter(
       (product) => product.quantity > 0
     );
-
+  
     const productDetails = selectedProducts
       .map((product) => product.name)
       .join(", ");
-
+  
     setPaymentStatus(status);
     setPaymentId(paymentId);
-
-    // Función para imprimir sin abrir una nueva pestaña y sin mostrar el ticket
+  
+    // Función para imprimir el ticket
     const printTicket = () => {
       const printArea = document.getElementById("printArea"); // Obtener el área de impresión
       const originalContent = document.body.innerHTML; // Guardar el contenido original
-
+  
       document.body.innerHTML = printArea.innerHTML; // Reemplazar el contenido visible por el ticket
       window.print(); // Imprimir
       document.body.innerHTML = originalContent; // Restaurar el contenido original
+  
+      Swal.fire({
+        title: "Gracias por tu compra!",
+        text: "Se ha completado exitosamente.",
+        icon: "success",
+      }).then(() => {
+        resetProducts(); // Poner en cero todos los productos después de la impresión
+      });
     };
-
+  
     // Primero cerrar el QR
     setShowQR(false);
-
-    // Luego mostrar el SweetAlert con confirmación y disparar la impresión
+  
+    // Mostrar el SweetAlert según el estado del pago
     if (status === "approved") {
       Swal.fire({
         title: "¡Pago Exitoso!",
@@ -123,6 +131,7 @@ const Home = () => {
       });
     }
   };
+  
 
   const incrementQuantity = (id) => {
     setLocalProducts(
