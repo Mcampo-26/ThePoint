@@ -3,88 +3,77 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash, faTimes } from "@fortawesome/free-solid-svg-icons";
 import { usePaymentStore } from "../store/usePaymentStore";
 import { useProductStore } from "../store/useProductStore";
+import ReactQRCode from "react-qr-code";
 import Swal from "sweetalert2";
+import io from "socket.io-client";
+
+// URL de tu servidor WebSocket en Heroku
+const socket = io("https://thepointback-03939a97aeeb.herokuapp.com", {
+  transports: ["websocket"],
+  reconnectionAttempts: 5, // Número de intentos de reconexión
+  reconnectionDelay: 3000, // Retraso entre intentos de reconexión
+});
 
 const Home = () => {
+  const { createPaymentLink, paymentLink, paymentLoading } = usePaymentStore();
   const { products, fetchProducts, needsUpdate, setNeedsUpdate } = useProductStore();
-  const [localProducts, setLocalProducts] = useState([]);
   const [showQR, setShowQR] = useState(false);
-  const printRef = useRef(null); // Usaremos un ref para el div oculto
+  const [localProducts, setLocalProducts] = useState([]); // Para gestionar cantidades de productos seleccionados
+  const [paymentStatus, setPaymentStatus] = useState(null); // Estado del pago
+  const [paymentId, setPaymentId] = useState(null); // ID del pago
+  const printRef = useRef(null); // Para acceder al contenido del ticket de forma oculta
 
   useEffect(() => {
-    fetchProducts(); // Obtener productos
+    fetchProducts(); // Obtener productos al cargar el componente
   }, [fetchProducts]);
 
   useEffect(() => {
     if (needsUpdate) {
-      fetchProducts();
-      setNeedsUpdate(false);
+      fetchProducts(); // Volver a obtener los productos si hay cambios
+      setNeedsUpdate(false); // Restablecer la bandera después de la actualización
     }
   }, [needsUpdate, fetchProducts, setNeedsUpdate]);
 
   useEffect(() => {
     const initializedProducts = products.map((product) => ({
       ...product,
-      quantity: 0, // Inicializamos con cantidad 0
+      quantity: 0, // Inicializa la cantidad en 0 para cada producto
     }));
     setLocalProducts(initializedProducts);
   }, [products]);
 
-  const incrementQuantity = (id) => {
-    setLocalProducts(
-      localProducts.map((product) =>
-        product._id === id
-          ? { ...product, quantity: product.quantity + 1 }
-          : product
-      )
-    );
-  };
+  // Conectar al servidor WebSocket y escuchar eventos
+  useEffect(() => {
+    socket.on("connect", () => {
+      console.log("Conectado al servidor WebSocket");
+    });
 
-  const decrementQuantity = (id) => {
-    setLocalProducts(
-      localProducts.map((product) =>
-        product._id === id && product.quantity > 0
-          ? { ...product, quantity: product.quantity - 1 }
-          : product
-      )
-    );
-  };
+    socket.on("paymentSuccess", ({ status, paymentId }) => {
+      handlePaymentResult(status, paymentId); // Usa la función para manejar el resultado del pago
+    });
 
-  const removeProduct = (id) => {
-    setLocalProducts(
-      localProducts.map((product) =>
-        product._id === id ? { ...product, quantity: 0 } : product
-      )
-    );
-  };
+    socket.on("disconnect", () => {
+      console.log("Desconectado del servidor WebSocket");
+    });
 
-  const selectedProducts = localProducts.filter(
-    (product) => product.quantity > 0
-  );
+    // Limpiar el listener cuando el componente se desmonta
+    return () => {
+      socket.off("paymentSuccess");
+      socket.disconnect(); // Desconectar el socket cuando el componente se desmonte
+    };
+  }, []);
 
-  const totalAmount = selectedProducts.reduce(
-    (total, product) => total + product.quantity * product.price,
-    0
-  );
-
-  const totalProducts = selectedProducts.reduce(
-    (total, product) => total + product.quantity,
-    0
-  );
-
-  const formatUnits = (quantity) => {
-    return quantity === 1 ? "unidad" : "unidades";
-  };
-
-  const handleApprovedPayment = () => {
-    const paymentResult = { status: "approved", paymentId: "fakePaymentId12345" };
-    handlePaymentResult(paymentResult.status, paymentResult.paymentId);
-  };
-
-  // Función para generar los tickets en el div oculto
+  // Función para manejar el estado del pago y resetear productos
   const handlePaymentResult = (status, paymentId) => {
+    const selectedProducts = localProducts.filter((product) => product.quantity > 0);
+
+    setPaymentStatus(status);
+    setPaymentId(paymentId);
+
+    // Función para imprimir los tickets
     const printTickets = () => {
       const printArea = document.getElementById("printArea");
+
       let allTicketsContent = selectedProducts
         .flatMap((product) => {
           // Generar un ticket por cada unidad del producto
@@ -136,16 +125,76 @@ const Home = () => {
     }
   };
 
+  const incrementQuantity = (id) => {
+    setLocalProducts(
+      localProducts.map((product) =>
+        product._id === id
+          ? { ...product, quantity: product.quantity + 1 }
+          : product
+      )
+    );
+  };
+
+  const decrementQuantity = (id) => {
+    setLocalProducts(
+      localProducts.map((product) =>
+        product._id === id && product.quantity > 0
+          ? { ...product, quantity: product.quantity - 1 }
+          : product
+      )
+    );
+  };
+
+  const removeProduct = (id) => {
+    setLocalProducts(
+      localProducts.map((product) =>
+        product._id === id ? { ...product, quantity: 0 } : product
+      )
+    );
+  };
+
+  const selectedProducts = localProducts.filter(
+    (product) => product.quantity > 0
+  );
+
+  const totalAmount = selectedProducts.reduce(
+    (total, product) => total + product.quantity * product.price,
+    0
+  );
+
+  const totalProducts = selectedProducts.reduce(
+    (total, product) => total + product.quantity,
+    0
+  );
+
+  const formatUnits = (quantity) => {
+    return quantity === 1 ? "unidad" : "unidades";
+  };
+
+  const handlePayment = async () => {
+    const productName = "La Previa";
+    try {
+      await createPaymentLink(productName, totalAmount);
+      setShowQR(true);
+    } catch (error) {
+      console.error("Error al generar el enlace de pago:", error);
+    }
+  };
+
   return (
     <div className="relative min-h-screen bg-gray-100 flex flex-col items-center py-10 bg-gray-300">
-      {/* Contenedor principal de productos */}
+      {/* Si se muestra el QR, difumina el contenido detrás */}
       <div className="mb-8 w-full max-w-5xl mx-auto px-4 lg:px-0">
         <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-400 py-3 px-6 rounded-lg inline-block">
           Productos
         </h1>
       </div>
 
-      <div className="flex flex-col lg:flex-row w-full">
+      <div
+        className={`flex flex-col lg:flex-row w-full ${
+          showQR ? "blur-md" : ""
+        }`}
+      >
         <div className="flex-1 grid grid-cols-1 gap-8 px-4 md:px-8 mt-20">
           {localProducts.map((product) => (
             <div
@@ -219,7 +268,7 @@ const Home = () => {
                   {totalProducts} {formatUnits(totalProducts)}
                 </span>
               </div>
-              <div className="mt-4 border-t pt-4 flex justify-between font-bold">
+              <div className="mt-4 border-t pt-4 flex justify_between font-bold">
                 <span>Total a pagar:</span>
                 <span>${totalAmount}</span>
               </div>
@@ -233,17 +282,43 @@ const Home = () => {
           {selectedProducts.length > 0 && (
             <div className="mt-6">
               <button
-                className="bg-green-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg shadow-lg hover:bg-green-700 transition duration-300 w-full"
-                onClick={handleApprovedPayment}
+                className="bg-blue-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg shadow-lg hover:bg-blue-700 transition duration-300 w-full"
+                onClick={handlePayment}
               >
-                Pago aprobado
+                {paymentLoading
+                  ? "Generando enlace..."
+                  : `Comprar por $${totalAmount}`}
               </button>
             </div>
           )}
         </div>
       </div>
 
-      {/* Div oculto para impresión */}
+      {showQR && paymentLink && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50">
+          <div className="relative bg-white p-6 rounded-lg shadow-lg w-11/12 sm:w-4/5 max-w-md h-auto">
+            <button
+              className="absolute -top-4 -right-4 text-red-500 hover:text-red-700 bg-white rounded-full p-2"
+              onClick={handleCloseQR} // Llamar a handleCloseQR para cerrar el modal y resetear los productos
+            >
+              <FontAwesomeIcon
+                icon={faTimes}
+                size="xl"
+                className="text-red-500 cursor-pointer transition-transform duration-200 hover:rotate-90"
+              />
+            </button>
+            <div className="flex justify-center items-center w-full">
+              <ReactQRCode
+                value={paymentLink}
+                size={450}
+                className="max-w-full h-auto"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Div oculto para imprimir los tickets */}
       <div id="printArea" ref={printRef} style={{ display: "none" }}></div>
     </div>
   );
