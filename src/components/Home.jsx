@@ -3,28 +3,16 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash, faTimes } from "@fortawesome/free-solid-svg-icons";
 import { usePaymentStore } from "../store/usePaymentStore";
 import { useProductStore } from "../store/useProductStore";
-import ReactQRCode from "react-qr-code";
 import Swal from "sweetalert2";
-import io from "socket.io-client";
-
-// URL de tu servidor WebSocket en Heroku (asegúrate de que el backend esté correctamente configurado)
-const socket = io("https://thepointback-03939a97aeeb.herokuapp.com", {
-  transports: ["websocket"],
-  reconnectionAttempts: 5,
-  reconnectionDelay: 3000,
-});
 
 const Home = () => {
-  const { createPaymentLink, paymentLink, paymentLoading } = usePaymentStore();
   const { products, fetchProducts, needsUpdate, setNeedsUpdate } = useProductStore();
-  const [showQR, setShowQR] = useState(false);
   const [localProducts, setLocalProducts] = useState([]);
-  const [paymentStatus, setPaymentStatus] = useState(null);
-  const [paymentId, setPaymentId] = useState(null);
+  const [showQR, setShowQR] = useState(false);
+  const hiddenTicketRef = useRef(null); 
 
-  // Obtener productos al cargar el componente
   useEffect(() => {
-    fetchProducts();
+    fetchProducts(); // Obtener productos
   }, [fetchProducts]);
 
   useEffect(() => {
@@ -37,88 +25,10 @@ const Home = () => {
   useEffect(() => {
     const initializedProducts = products.map((product) => ({
       ...product,
-      quantity: 0,
+      quantity: 0, // Inicializamos con cantidad 0
     }));
     setLocalProducts(initializedProducts);
   }, [products]);
-
-  useEffect(() => {
-    socket.on("connect", () => {
-      console.log("Conectado al servidor WebSocket");
-    });
-
-    socket.on("paymentSuccess", ({ status, paymentId }) => {
-      handlePaymentResult(status, paymentId);
-    });
-
-    socket.on("disconnect", () => {
-      console.log("Desconectado del servidor WebSocket");
-    });
-
-    return () => {
-      socket.off("paymentSuccess");
-      socket.disconnect();
-    };
-  }, []);
-
-  // Función para manejar el resultado del pago y resetear productos
-  const handlePaymentResult = (status, paymentId) => {
-    const selectedProducts = localProducts.filter((product) => product.quantity > 0);
-
-    setPaymentStatus(status);
-    setPaymentId(paymentId);
-
-    const printTicket = () => {
-      const printArea = document.getElementById("printArea");
-      const originalContent = document.body.innerHTML;
-
-      document.body.innerHTML = printArea.innerHTML;
-      window.print();
-      document.body.innerHTML = originalContent;
-
-      Swal.fire({
-        title: "Gracias por tu compra!",
-        text: "Se ha completado exitosamente.",
-        icon: "success",
-        showConfirmButton: false,
-        timer: 3000,
-      }).then(() => {
-        resetAll(); // Aquí reseteamos todo después del mensaje
-      });
-    };
-
-    if (status === "approved") {
-      Swal.fire({
-        title: "¡Pago Exitoso!",
-        text: "Gracias por tu compra.",
-        icon: "success",
-        showConfirmButton: false,
-        timer: 3000,
-      }).then(() => {
-        setTimeout(() => {
-          printTicket();
-          handleCloseQR();
-        }, 3000);
-      });
-    }
-  };
-
-  // Función para cerrar el modal del QR y resetear los productos
-  const handleCloseQR = () => {
-    setShowQR(false);
-    resetAll();
-  };
-
-  const resetAll = () => {
-    setLocalProducts((prevProducts) =>
-      prevProducts.map((product) => ({
-        ...product,
-        quantity: 0,
-      }))
-    );
-    setPaymentStatus(null);
-    setPaymentId(null);
-  };
 
   const incrementQuantity = (id) => {
     setLocalProducts(
@@ -157,16 +67,141 @@ const Home = () => {
     0
   );
 
-  const handlePayment = async () => {
-    const productName = "La Previa";
-    try {
-      await createPaymentLink(productName, totalAmount);
-      setShowQR(true);
-      console.log("Enlace de pago generado:", paymentLink);
-    } catch (error) {
-      console.error("Error al generar el enlace de pago:", error);
-    }
+  const totalProducts = selectedProducts.reduce(
+    (total, product) => total + product.quantity,
+    0
+  );
+
+  const formatUnits = (quantity) => {
+    return quantity === 1 ? "unidad" : "unidades";
   };
+
+  const handleApprovedPayment = () => {
+    const paymentResult = { status: "approved", paymentId: "fakePaymentId12345" };
+    handlePaymentResult(paymentResult.status, paymentResult.paymentId);
+  };
+
+   
+ // Función para determinar si usar "un" o "una"
+ const getArticle = (productName) => {
+  return `<span class="product-name">${productName}</span>`;
+};
+
+
+
+
+const handlePaymentResult = (status, paymentId) => {
+  const printTickets = () => {
+    let allTicketsContent = selectedProducts
+      .flatMap((product) => {
+        return Array.from({ length: product.quantity }).map(() => {
+          return `
+            <div class="ticket-container">
+              <h2 class="ticket-title">1x</h2>
+              <p class="ticket-item">${getArticle(product.name)}</p>
+              <h2 class="ticket-footer">Gracias por tu compra.</h2>
+            </div>
+          `;
+        });
+      })
+      .join(''); // Eliminar cualquier espacio entre tickets
+  
+    const iframe = document.createElement("iframe");
+    document.body.appendChild(iframe);
+    iframe.style.position = "absolute";
+    iframe.style.width = "0px";
+    iframe.style.height = "0px";
+    const doc = iframe.contentWindow.document;
+    doc.open();
+    doc.write(`
+      <html>
+        <head>
+          <style>
+            /* Estilos generales del ticket */
+            body {
+               margin: 0;
+               padding: 0;
+             
+              
+            }
+  
+            /* Eliminar márgenes superiores e inferiores de los contenedores */
+            .ticket-container {
+              width: 10cm;             
+              height: 6cm; /* Asegurar una altura específica */
+              margin: 0; /* Sin margen en el contenedor */              
+              display: flex;
+              flex-direction: column;
+              justify-content: center; /* Centrar contenido verticalmente */
+              align-items: center;
+              box-sizing: border-box;
+              overflow: hidden;
+              page-break-inside: avoid; /* Evitar cortes en los tickets */
+              padding-left: 2cm; /* Ajusta este valor según lo necesites */
+            }
+  
+            /* Estilos para los elementos dentro del ticket */
+            .ticket-title, .ticket-item, .ticket-footer {
+              margin: 0;
+              padding: 0;
+              text-align: center;
+            }
+  
+            /* Eliminar márgenes y padding en el título */
+            .ticket-title {
+              font-size: 35px;
+              padding-bottom: 2px;
+            }
+  
+            /* Control preciso del tamaño de la fuente del nombre del producto */
+            .ticket-item {
+              font-size: 100px;
+              padding: 0;
+            }
+  
+            /* Control sobre el footer para evitar cualquier espacio adicional */
+            .ticket-footer {
+              font-size: 18px;
+              margin-top: 3px;
+              padding: 0;
+            }
+  
+            /* Forzar sin margen entre tickets consecutivos */
+            .ticket-container + .ticket-container {
+              margin-top: 0 !important;
+              padding-top: 0 !important;
+            }
+          </style>
+        </head>
+        <body>${allTicketsContent}</body>
+      </html>
+    `);
+    doc.close();
+    iframe.contentWindow.focus();
+    iframe.contentWindow.print();
+    document.body.removeChild(iframe);
+  };
+  
+  
+
+  if (status === "approved") {
+    Swal.fire({
+      title: "¡Pago Exitoso!",
+      text: "Gracias por tu compra.",
+      icon: "success",
+      showConfirmButton: false,
+      timer: 1500,
+    }).then(() => {
+      setTimeout(() => {
+        printTickets();
+        window.location.reload();
+      }, 1000);
+    });
+  }
+};
+
+  
+  
 
   return (
     <div className="relative min-h-screen bg-gray-100 flex flex-col items-center py-10 bg-gray-300">
@@ -176,9 +211,7 @@ const Home = () => {
         </h1>
       </div>
 
-      <div
-        className={`flex flex-col lg:flex-row w-full ${showQR ? "blur-md" : ""}`}
-      >
+      <div className="flex flex-col lg:flex-row w-full">
         <div className="flex-1 grid grid-cols-1 gap-8 px-4 md:px-8 mt-20">
           {localProducts.map((product) => (
             <div
@@ -230,7 +263,7 @@ const Home = () => {
                   >
                     <div className="flex flex-col sm:flex-row items-center space-x-2 md:space-x-4">
                       <span className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm">
-                        {product.quantity}
+                        {product.quantity} {formatUnits(product.quantity)}
                       </span>
                       <span className="font-medium text-gray-700">
                         {product.name}
@@ -247,6 +280,12 @@ const Home = () => {
               </ul>
 
               <div className="mt-4 border-t pt-4 flex justify-between font-bold">
+                <span>Total de productos:</span>
+                <span>
+                  {totalProducts} {formatUnits(totalProducts)}
+                </span>
+              </div>
+              <div className="mt-4 border-t pt-4 flex justify-between font-bold">
                 <span>Total a pagar:</span>
                 <span>${totalAmount}</span>
               </div>
@@ -260,59 +299,13 @@ const Home = () => {
           {selectedProducts.length > 0 && (
             <div className="mt-6">
               <button
-                className="bg-blue-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg shadow-lg hover:bg-blue-700 transition duration-300 w-full"
-                onClick={handlePayment}
+                className="bg-green-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg shadow-lg hover:bg-green-700 transition duration-300 w-full"
+                onClick={handleApprovedPayment} // Botón para simular pago aprobado
               >
-                {paymentLoading
-                  ? "Generando enlace..."
-                  : `Comprar por $${totalAmount}`}
+                Pago aprobado
               </button>
             </div>
           )}
-        </div>
-      </div>
-
-      {showQR && paymentLink && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50">
-          <div className="relative bg-white p-6 rounded-lg shadow-lg w-11/12 sm:w-4/5 max-w-md h-auto">
-            <button
-              className="absolute -top-4 -right-4 text-red-500 hover:text-red-700 bg-white rounded-full p-2"
-              onClick={handleCloseQR}
-            >
-              <FontAwesomeIcon
-                icon={faTimes}
-                size="xl"
-                className="text-red-500 cursor-pointer transition-transform duration-200 hover:rotate-90"
-              />
-            </button>
-            <div className="flex justify-center items-center w-full">
-              <ReactQRCode value={paymentLink} size={450} className="max-w-full h-auto" />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Div oculto para imprimir el ticket */}
-      <div id="printArea" style={{ display: "none" }}>
-        <div
-          style={{
-            width: "8cm",
-            height: "7cm",
-            margin: "0 auto",
-            position: "relative",
-            left: "-5cm",
-            padding: "0",
-            textAlign: "center",
-            fontSize: "90px",
-          }}
-        >
-          <h2 style={{ fontSize: "40px", marginTop: "-20px" }}>1x</h2>
-          <p style={{ fontSize: "75px", marginLeft: "5px", marginTop: "5px" }}>
-            {selectedProducts.length > 0
-              ? selectedProducts[0].name.replace(/[0-9]/g, "")
-              : "Producto no disponible"}
-          </p>
-          <h2 style={{ fontSize: "20px" }}>Gracias por tu compra.</h2>
         </div>
       </div>
     </div>
