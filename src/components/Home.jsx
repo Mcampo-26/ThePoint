@@ -16,7 +16,8 @@ const socket = io("https://thepointback-03939a97aeeb.herokuapp.com", {
 
 const Home = () => {
   const { createPaymentLink, paymentLink, paymentLoading } = usePaymentStore();
-  const { products, fetchProducts, needsUpdate, setNeedsUpdate } = useProductStore();
+  const { products, fetchProducts, needsUpdate, setNeedsUpdate } =
+    useProductStore();
   const [showQR, setShowQR] = useState(false);
   const [localProducts, setLocalProducts] = useState([]); // Para gestionar cantidades de productos seleccionados
   const [paymentStatus, setPaymentStatus] = useState(null); // Estado del pago
@@ -75,16 +76,16 @@ const Home = () => {
     setPaymentStatus(status);
     setPaymentId(paymentId);
 
-    // Función para imprimir los tickets
+    // Función para imprimir los tickets con estilos actualizados
     const printTickets = () => {
       selectedProducts.forEach((product) => {
         const ticketContent = `
-          <div style="width: 9cm; height: 9cm; margin: 0 auto; text-align: center; font-size: 90px;">
-            <h2 style="font-size: 30px; margin-top: -25px; margin-bottom: 5px;">Vale por</h2>
-            <p style="font-size: 68px;">${product.quantity} ${
+          <div class="ticket-container">
+            <h2 class="ticket-title">1x</h2>
+            <p class="ticket-item">${product.quantity} ${
           product.quantity === 1 ? product.name : product.name + "s"
         }</p>
-            <h2 style="font-size: 10px;">Gracias por tu compra.</h2>
+            <h2 class="ticket-footer">Gracias por tu compra.</h2>
           </div>
         `;
 
@@ -100,22 +101,33 @@ const Home = () => {
                   padding: 0;
                 }
                 .ticket-container {
-                  width: 9cm;
-                  height: 9cm;
+                  width: 10cm;
+                  height: 7cm;
                   margin: 0 auto;
                   text-align: center;
                   font-size: 90px;
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: center;
+                  align-items: center;
+                  box-sizing: border-box;
+                  padding-left: 1.5cm;
+                  page-break-inside: avoid;
                 }
                 .ticket-title {
-                  font-size: 30px;
-                  margin-top: -25px;
-                  margin-bottom: 5px;
+                  font-size: 35px;
+                  padding-bottom: 2px;
                 }
                 .ticket-item {
-                  font-size: 68px;
+                  font-size: 100px;
                 }
                 .ticket-footer {
-                  font-size: 10px;
+                  font-size: 18px;
+                  margin-top: 3px;
+                }
+                .ticket-container + .ticket-container {
+                  margin-top: 0 !important;
+                  padding-top: 0 !important;
                 }
               </style>
             </head>
@@ -259,7 +271,9 @@ const Home = () => {
       </div>
 
       <div
-        className={`flex flex-col lg:flex-row w-full ${showQR ? "blur-md" : ""}`}
+        className={`flex flex-col lg:flex-row w-full ${
+          showQR ? "blur-md" : ""
+        }`}
       >
         <div className="flex-1 grid grid-cols-1 gap-8 px-4 md:px-8 mt-20">
           {localProducts.map((product) => (
@@ -328,9 +342,11 @@ const Home = () => {
                 ))}
               </ul>
 
-              <div className="mt-4 border-t pt-4 flex justify_between font-bold">
+              <div className="mt-4 border-t pt-4 flex justify-between font-bold">
                 <span>Total de productos:</span>
-                <span>{totalProducts} {formatUnits(totalProducts)}</span>
+                <span>
+                  {totalProducts} {formatUnits(totalProducts)}
+                </span>
               </div>
               <div className="mt-4 border-t pt-4 flex justify_between font-bold">
                 <span>Total a pagar:</span>
@@ -349,7 +365,9 @@ const Home = () => {
                 className="bg-blue-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg shadow-lg hover:bg-blue-700 transition duration-300 w-full"
                 onClick={handlePayment}
               >
-                {paymentLoading ? "Generando enlace..." : `Comprar por $${totalAmount}`}
+                {paymentLoading
+                  ? "Generando enlace..."
+                  : `Comprar por $${totalAmount}`}
               </button>
             </div>
           )}
