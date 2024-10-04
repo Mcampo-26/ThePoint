@@ -362,7 +362,7 @@ const Home = () => {
     <h2
       style={{
         fontSize: "30px",
-        marginTop: "-25px", // Ajusta el margen superior
+        marginTop: "-35px", // Ajusta el margen superior
         marginBottom: "5px", // Ajusta el margen inferior
       }}
     >
@@ -372,7 +372,7 @@ const Home = () => {
     {/* Mostrar el nombre y la cantidad de cada producto seleccionado */}
     {selectedProducts.map((product) => (
       <div key={product._id} style={{ marginBottom: "10px" }}>
-        <p style={{ fontSize: "68px", marginLeft: "5px" }}>
+        <p style={{ fontSize: "55px", marginLeft: "5px" }}>
           {product.quantity}{" "}
           {product.quantity === 1
             ? product.name.replace(/[0-9]/g, "") // Singular si es 1
