@@ -80,10 +80,12 @@ const Home = () => {
     const printTickets = () => {
       selectedProducts.forEach((product) => {
         const ticketContent = `
-          <div style="width: 9cm; height: 9cm; margin: 0 auto; text-align: center; font-size: 90px;">
-            <h2 style="font-size: 30px; margin-top: -25px; margin-bottom: 5px;">Vale por</h2>
-            <p style="font-size: 68px;">${product.quantity} ${product.quantity === 1 ? product.name : product.name + "s"}</p>
-            <h2 style="font-size: 10px;">Gracias por tu compra.</h2>
+          <div class="ticket-container">
+            <h2 class="ticket-title">1x</h2>
+            <p class="ticket-item">${product.quantity} ${
+          product.quantity === 1 ? product.name : product.name + "s"
+        }</p>
+            <h2 class="ticket-footer">Gracias por tu compra.</h2>
           </div>
         `;
 
@@ -93,6 +95,30 @@ const Home = () => {
           <html>
             <head>
               <title>Imprimir ticket</title>
+              <style>
+                body {
+                  margin: 0;
+                  padding: 0;
+                }
+                .ticket-container {
+                  width: 9cm;
+                  height: 9cm;
+                  margin: 0 auto;
+                  text-align: center;
+                  font-size: 90px;
+                }
+                .ticket-title {
+                  font-size: 30px;
+                  margin-top: -25px;
+                  margin-bottom: 5px;
+                }
+                .ticket-item {
+                  font-size: 68px;
+                }
+                .ticket-footer {
+                  font-size: 10px;
+                }
+              </style>
             </head>
             <body>${ticketContent}</body>
           </html>
@@ -311,7 +337,7 @@ const Home = () => {
                   {totalProducts} {formatUnits(totalProducts)}
                 </span>
               </div>
-              <div className="mt-4 border-t pt-4 flex justify_between font-bold">
+              <div className="mt-4 border-t pt-4 flex justify-between font-bold">
                 <span>Total a pagar:</span>
                 <span>${totalAmount}</span>
               </div>
