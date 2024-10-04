@@ -7,7 +7,7 @@ import ReactQRCode from "react-qr-code";
 import Swal from "sweetalert2";
 import io from "socket.io-client";
 
-// URL de tu servidor WebSocket en Heroku (asegúrate de que el backend esté correctamente configurado)
+// URL de tu servidor WebSocket en Heroku
 const socket = io("https://thepointback-03939a97aeeb.herokuapp.com", {
   transports: ["websocket"],
   reconnectionAttempts: 5, // Número de intentos de reconexión
@@ -22,22 +22,19 @@ const Home = () => {
   const [localProducts, setLocalProducts] = useState([]); // Para gestionar cantidades de productos seleccionados
   const [paymentStatus, setPaymentStatus] = useState(null); // Estado del pago
   const [paymentId, setPaymentId] = useState(null); // ID del pago
-  const hiddenTicketRef = useRef(null); // Para acceder al contenido del ticket de forma oculta
 
   // Obtener productos al cargar el componente
   useEffect(() => {
-    fetchProducts(); // Se obtienen los productos cuando se monta el componente
+    fetchProducts();
   }, [fetchProducts]);
 
-  // Actualizar productos cuando detectamos que hay una actualización pendiente
   useEffect(() => {
     if (needsUpdate) {
-      fetchProducts(); // Volver a obtener los productos si hay cambios
-      setNeedsUpdate(false); // Restablecer la bandera después de la actualización
+      fetchProducts();
+      setNeedsUpdate(false);
     }
   }, [needsUpdate, fetchProducts, setNeedsUpdate]);
 
-  // Sincronizar productos locales con el estado global
   useEffect(() => {
     const initializedProducts = products.map((product) => ({
       ...product,
@@ -46,153 +43,88 @@ const Home = () => {
     setLocalProducts(initializedProducts);
   }, [products]);
 
-  // Conectar al servidor WebSocket y escuchar eventos
   useEffect(() => {
     socket.on("connect", () => {
       console.log("Conectado al servidor WebSocket");
     });
 
     socket.on("paymentSuccess", ({ status, paymentId }) => {
-      handlePaymentResult(status, paymentId); // Usa la función para manejar el resultado del pago
+      handlePaymentResult(status, paymentId);
     });
 
     socket.on("disconnect", () => {
       console.log("Desconectado del servidor WebSocket");
     });
 
-    // Limpiar el listener cuando el componente se desmonta
     return () => {
       socket.off("paymentSuccess");
-      socket.disconnect(); // Desconectar el socket cuando el componente se desmonte
+      socket.disconnect();
     };
   }, []);
 
-  // Función para manejar el estado del pago y resetear productos
   const handlePaymentResult = (status, paymentId) => {
+    const selectedProducts = localProducts.filter(
+      (product) => product.quantity > 0
+    );
+     console.log("Productos seleccionados:", selectedProducts);
+
+    setPaymentStatus(status);
+    setPaymentId(paymentId);
+
+    // Función para imprimir los tickets
     const printTickets = () => {
-      let allTicketsContent = selectedProducts
-        .flatMap((product) => {
-          return Array.from({ length: product.quantity }).map(() => {
-            return `
-              <div class="ticket-container">
-                <h2 class="ticket-title">1x</h2>
-                <p class="ticket-item">${getArticle(product.name)}</p>
-                <h2 class="ticket-footer">Gracias por tu compra.</h2>
-              </div>
-            `;
-          });
-        })
-        .join(''); // Eliminar cualquier espacio entre tickets
-    
-      const iframe = document.createElement("iframe");
-      document.body.appendChild(iframe);
-      iframe.style.position = "absolute";
-      iframe.style.width = "0px";
-      iframe.style.height = "0px";
-      const doc = iframe.contentWindow.document;
-      doc.open();
-      doc.write(`
+      let ticketContent = selectedProducts
+        .map(
+          (product) => `
+            <div class="ticket-container">
+              <h2 class="ticket-title">Vale por</h2>
+              <p class="ticket-item">${product.quantity} ${
+            product.quantity === 1 ? product.name : product.name + "s"
+          }</p>
+              <h2 class="ticket-footer">Gracias por tu compra.</h2>
+            </div>`
+        )
+        .join(""); // Unir todos los tickets en uno
+
+      const printWindow = window.open("", "", "width=300,height=300");
+      printWindow.document.write(`
         <html>
           <head>
             <style>
-              /* Estilos generales del ticket */
-              body {
-                 margin: 0;
-                 padding: 0;
-               
-                
-              }
-    
-              /* Eliminar márgenes superiores e inferiores de los contenedores */
-              .ticket-container {
-                width: 7cm;             
-                height: 6cm; /* Asegurar una altura específica */
-                margin: 0; /* Sin margen en el contenedor */              
-                display: flex;
-                flex-direction: column;
-                justify-content: center; /* Centrar contenido verticalmente */
-                align-items: center;
-                box-sizing: border-box;
-                overflow: hidden;
-                page-break-inside: avoid; /* Evitar cortes en los tickets */
-                padding-left: 2cm; /* Ajusta este valor según lo necesites */
-              }
-    
-              /* Estilos para los elementos dentro del ticket */
-              .ticket-title, .ticket-item, .ticket-footer {
-                margin: 0;
-                padding: 0;
-                text-align: center;
-              }
-    
-              /* Eliminar márgenes y padding en el título */
-              .ticket-title {
-                font-size: 35px;
-                padding-bottom: 2px;
-              }
-    
-              /* Control preciso del tamaño de la fuente del nombre del producto */
-              .ticket-item {
-                font-size: 100px;
-                padding: 0;
-              }
-    
-              /* Control sobre el footer para evitar cualquier espacio adicional */
-              .ticket-footer {
-                font-size: 25x;
-                margin-top: 3px;
-                padding: 0;
-              }
-    
-              /* Forzar sin margen entre tickets consecutivos */
-              .ticket-container + .ticket-container {
-                margin-top: 0 !important;
-                padding-top: 0 !important;
-              }
+              body { margin: 0; padding: 0; text-align: center; font-size: 12px; }
+              .ticket-container { width: 100%; text-align: center; font-size: 14px; margin-bottom: 10px; }
+              .ticket-title { font-size: 35px; margin: 5px 0; }
+              .ticket-item { font-size: 25px; margin: 5px 0; }
+              .ticket-footer { font-size: 18px; margin-top: 10px; }
             </style>
           </head>
-          <body>${allTicketsContent}</body>
+          <body onload="window.print();window.close()">
+            ${ticketContent}
+          </body>
         </html>
       `);
-      doc.close();
-      iframe.contentWindow.focus();
-      iframe.contentWindow.print();
-      document.body.removeChild(iframe);
+
+      printWindow.document.close();
     };
-    
-    
-  
+
     if (status === "approved") {
       Swal.fire({
         title: "¡Pago Exitoso!",
         text: "Gracias por tu compra.",
         icon: "success",
         showConfirmButton: false,
-        timer: 1500,
+        timer: 2000,
       }).then(() => {
+        handleCloseQR();
         setTimeout(() => {
           printTickets();
-          window.location.reload();
         }, 1000);
       });
     }
   };
-  
-  // Función para cerrar el modal del QR y resetear productos
-  const handleCloseQR = () => {
-    setShowQR(false); // Cerrar el modal del QR
-  };
 
-  // Función que resetea todo: productos, estado del pago y QR
-  const resetAll = () => {
-    setLocalProducts((prevProducts) =>
-      prevProducts.map((product) => ({
-        ...product,
-        quantity: 0, // Resetea la cantidad de todos los productos
-      }))
-    );
-    setPaymentStatus(null); // Resetea el estado del pago
-    setPaymentId(null); // Resetea el ID de la orden
+  const handleCloseQR = () => {
+    setShowQR(false);
   };
 
   const incrementQuantity = (id) => {
@@ -253,7 +185,6 @@ const Home = () => {
 
   return (
     <div className="relative min-h-screen bg-gray-100 flex flex-col items-center py-10 bg-gray-300">
-      {/* Si se muestra el QR, difumina el contenido detrás */}
       <div className="mb-8 w-full max-w-5xl mx-auto px-4 lg:px-0">
         <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-400 py-3 px-6 rounded-lg inline-block">
           Productos
@@ -338,7 +269,7 @@ const Home = () => {
                   {totalProducts} {formatUnits(totalProducts)}
                 </span>
               </div>
-              <div className="mt-4 border-t pt-4 flex justify_between font-bold">
+              <div className="mt-4 border-t pt-4 flex justify-between font-bold">
                 <span>Total a pagar:</span>
                 <span>${totalAmount}</span>
               </div>
@@ -369,7 +300,7 @@ const Home = () => {
           <div className="relative bg-white p-6 rounded-lg shadow-lg w-11/12 sm:w-4/5 max-w-md h-auto">
             <button
               className="absolute -top-4 -right-4 text-red-500 hover:text-red-700 bg-white rounded-full p-2"
-              onClick={handleCloseQR} // Llamar a handleCloseQR para cerrar el modal y resetear los productos
+              onClick={handleCloseQR}
             >
               <FontAwesomeIcon
                 icon={faTimes}
