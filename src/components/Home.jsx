@@ -76,17 +76,33 @@ const Home = () => {
     setPaymentStatus(status);
     setPaymentId(paymentId);
 
-    // Función para imprimir el ticket
-    const printTicket = () => {
-      const printArea = document.getElementById("printArea");
-      const originalContent = document.body.innerHTML;
+    // Función para imprimir los tickets
+    const printTickets = () => {
+      selectedProducts.forEach((product) => {
+        const ticketContent = `
+          <div style="width: 9cm; height: 9cm; margin: 0 auto; text-align: center; font-size: 90px;">
+            <h2 style="font-size: 30px; margin-top: -25px; margin-bottom: 5px;">Vale por</h2>
+            <p style="font-size: 68px;">${product.quantity} ${product.quantity === 1 ? product.name : product.name + "s"}</p>
+            <h2 style="font-size: 10px;">Gracias por tu compra.</h2>
+          </div>
+        `;
 
-      document.body.innerHTML = printArea.innerHTML;
-      window.print();
-      document.body.innerHTML = originalContent;
+        // Crear un iframe temporal para manejar la impresión
+        const printWindow = window.open("", "", "width=900,height=900");
+        printWindow.document.write(`
+          <html>
+            <head>
+              <title>Imprimir ticket</title>
+            </head>
+            <body>${ticketContent}</body>
+          </html>
+        `);
 
-      // Reseteamos productos y cerramos el QR
-      resetAll();
+        printWindow.document.close(); // Cerrar el documento para asegurar que el contenido esté listo
+        printWindow.focus(); // Asegurarse de que la ventana de impresión esté enfocada
+        printWindow.print(); // Iniciar la impresión
+        printWindow.close(); // Cerrar la ventana de impresión después de que se complete
+      });
     };
 
     // Mostrar el SweetAlert según el estado del pago
@@ -100,7 +116,7 @@ const Home = () => {
       }).then(() => {
         handleCloseQR(); // Cerrar QR antes de imprimir
         setTimeout(() => {
-          printTicket(); // Imprimir ticket después de 1 segundo
+          printTickets(); // Imprimir tickets por cada producto
           window.location.reload(); // Recargar la página después de imprimir
         }, 1000);
       });
@@ -114,7 +130,7 @@ const Home = () => {
       }).then(() => {
         handleCloseQR(); // Cerrar QR antes de imprimir
         setTimeout(() => {
-          printTicket(); // Imprimir ticket en estado pendiente
+          printTickets(); // Imprimir ticket en estado pendiente
           window.location.reload(); // Recargar la página después de imprimir
         }, 1000);
       });
@@ -128,7 +144,7 @@ const Home = () => {
       }).then(() => {
         handleCloseQR(); // Cerrar QR antes de imprimir
         setTimeout(() => {
-          printTicket(); // Imprimir ticket en estado fallido
+          printTickets(); // Imprimir ticket en estado fallido
           window.location.reload(); // Recargar la página después de imprimir
         }, 1000);
       });
@@ -344,53 +360,6 @@ const Home = () => {
           </div>
         </div>
       )}
-
-      {/* Div oculto para imprimir el ticket */}
-      <div id="printArea" style={{ display: "none" }}>
-  <div
-    style={{
-      width: "9cm",
-      height: "9cm",
-      margin: "0 auto",
-      position: "relative",
-      left: "-2cm",
-      padding: "0",
-      textAlign: "center",
-      fontSize: "90px",
-    }}
-  >
-    <h2
-      style={{
-        fontSize: "30px",
-        marginTop: "-35px", // Ajusta el margen superior
-        marginBottom: "5px", // Ajusta el margen inferior
-      }}
-    >
-      Vale por:
-    </h2>
-
-    {/* Mostrar el nombre y la cantidad de cada producto seleccionado */}
-    {selectedProducts.map((product) => (
-      <div key={product._id} style={{ marginBottom: "10px" }}>
-        <p style={{ fontSize: "55px", marginLeft: "5px" }}>
-          {product.quantity}{" "}
-          {product.quantity === 1
-            ? product.name.replace(/[0-9]/g, "") // Singular si es 1
-            : product.name.replace(/[0-9]/g, "") + "s"} {/* Plural si es más de 1 */}
-        </p>
-      </div>
-    ))}
-
-    <h2
-      style={{
-        fontSize: "10px",
-      }}
-    >
-      Gracias por tu compra.
-    </h2>
-  </div>
-</div>
-
     </div>
   );
 };
