@@ -1,31 +1,18 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash, faTimes } from "@fortawesome/free-solid-svg-icons";
 import { usePaymentStore } from "../store/usePaymentStore";
 import { useProductStore } from "../store/useProductStore";
-import ReactQRCode from "react-qr-code";
 import Swal from "sweetalert2";
-import io from "socket.io-client";
-
-// URL de tu servidor WebSocket en Heroku
-const socket = io("https://thepointback-03939a97aeeb.herokuapp.com", {
-  transports: ["websocket"],
-  reconnectionAttempts: 5, 
-  reconnectionDelay: 3000,
-});
 
 const Home = () => {
-  const { createPaymentLink, paymentLink, paymentLoading } = usePaymentStore();
-  const { products, fetchProducts, needsUpdate, setNeedsUpdate } =
-    useProductStore();
-  const [showQR, setShowQR] = useState(false);
+  const { products, fetchProducts, needsUpdate, setNeedsUpdate } = useProductStore();
   const [localProducts, setLocalProducts] = useState([]);
-  const [paymentStatus, setPaymentStatus] = useState(null);
-  const [paymentId, setPaymentId] = useState(null);
+  const [showQR, setShowQR] = useState(false);
+  const printRef = useRef(null); // Usaremos un ref para el div oculto
 
-  // Obtener productos al cargar el componente
   useEffect(() => {
-    fetchProducts();
+    fetchProducts(); // Obtener productos
   }, [fetchProducts]);
 
   useEffect(() => {
@@ -38,123 +25,10 @@ const Home = () => {
   useEffect(() => {
     const initializedProducts = products.map((product) => ({
       ...product,
-      quantity: 0,
+      quantity: 0, // Inicializamos con cantidad 0
     }));
     setLocalProducts(initializedProducts);
   }, [products]);
-
-  // WebSocket setup
-  useEffect(() => {
-    socket.on("connect", () => {
-      console.log("Conectado al servidor WebSocket");
-    });
-
-    socket.on("paymentSuccess", ({ status, paymentId }) => {
-      handlePaymentResult(status, paymentId);
-    });
-
-    socket.on("disconnect", () => {
-      console.log("Desconectado del servidor WebSocket");
-    });
-
-    return () => {
-      socket.off("paymentSuccess");
-      socket.disconnect();
-    };
-  }, []);
-
-  // Manejar resultado del pago
-const handlePaymentResult = (status, paymentId) => {
-  const printTickets = () => {
-    // Generar el contenido de los tickets
-    let allTicketsContent = selectedProducts
-      .flatMap((product) => {
-        // Generar tantos tickets como la cantidad de productos
-        return Array.from({ length: product.quantity }).map(() => {
-          return `
-            <div class="ticket-container">
-              <h2 class="ticket-title">1x</h2>
-              <p class="ticket-item">${product.name}</p>
-              <h2 class="ticket-footer">Gracias por tu compra.</h2>
-            </div>
-          `;
-        });
-      })
-      .join(''); // Unir todo el contenido en una sola cadena de HTML
-
-    // Crear un iframe temporal
-    const iframe = document.createElement("iframe");
-    document.body.appendChild(iframe); // Añadir iframe al DOM
-    iframe.style.position = "absolute";
-    iframe.style.width = "0px";
-    iframe.style.height = "0px";
-    const iframeDoc = iframe.contentWindow || iframe.contentDocument;
-    const doc = iframeDoc.document;
-
-    // Escribir el contenido de los tickets en el iframe
-    doc.open();
-    doc.write(`
-      <html>
-        <head>
-          <style>
-            body { margin: 0; padding: 0; }
-            .ticket-container { 
-              width: 9cm;
-              height: 9cm; 
-              margin: 0 auto; 
-              text-align: center; 
-              font-size: 90px;
-              page-break-after: always; /* Separar cada ticket en una nueva página */
-            }
-            .ticket-title {
-              font-size: 35px;
-              margin-bottom: 5px;
-            }
-            .ticket-item {
-              font-size: 68px;
-              margin-bottom: 5px;
-            }
-            .ticket-footer {
-              font-size: 18px;
-            }
-          </style>
-        </head>
-        <body>${allTicketsContent}</body>
-      </html>
-    `);
-    doc.close(); // Cerrar el documento
-
-    // Asegurar que el contenido se ha cargado completamente antes de la impresión
-    iframe.onload = () => {
-      iframe.contentWindow.focus();
-      iframe.contentWindow.print();
-      document.body.removeChild(iframe); // Eliminar el iframe después de la impresión
-    };
-  };
-
-  // Lógica del resultado de pago
-  if (status === "approved") {
-    Swal.fire({
-      title: "¡Pago Exitoso!",
-      text: "Gracias por tu compra.",
-      icon: "success",
-      showConfirmButton: false,
-      timer: 1500,
-    }).then(() => {
-      setTimeout(() => {
-        printTickets(); // Imprimir tickets después de la alerta de éxito
-        window.location.reload();
-      }, 1000);
-    });
-  }
-};
-
-
-
-  // Cerrar QR y resetear productos
-  const handleCloseQR = () => {
-    setShowQR(false);
-  };
 
   const incrementQuantity = (id) => {
     setLocalProducts(
@@ -202,25 +76,77 @@ const handlePaymentResult = (status, paymentId) => {
     return quantity === 1 ? "unidad" : "unidades";
   };
 
-  const handlePayment = async () => {
-    const productName = "La Previa";
-    try {
-      await createPaymentLink(productName, totalAmount);
-      setShowQR(true);
-    } catch (error) {
-      console.error("Error al generar el enlace de pago:", error);
-    }
+  const handleApprovedPayment = () => {
+    const paymentResult = { status: "approved", paymentId: "fakePaymentId12345" };
+    handlePaymentResult(paymentResult.status, paymentResult.paymentId);
   };
+
+  // Función para generar los tickets en el div oculto
+ const handlePaymentResult = (status, paymentId) => {
+  const printTickets = () => {
+    const printArea = document.getElementById("printArea");
+    let allTicketsContent = selectedProducts
+      .flatMap((product) => {
+        // Generar un ticket por cada unidad del producto
+        return Array.from({ length: product.quantity }).map(() => {
+          return `
+            <div
+              style="
+                width: 8cm; /* Ajusta el ancho a 8 cm */
+                height: 8cm; /* Ajusta la altura a 8 cm */
+                padding: 5px; /* Mantén un pequeño padding */
+                text-align: center;
+                font-size: 25px; /* Aumenta el tamaño de la fuente */
+                border: 1px solid #000; /* Mantén el borde para referencia visual */
+                margin-bottom: 10px; /* Espacio entre tickets */
+              "
+            >
+              <h2 style="font-size: 25px; margin-bottom: 5px;">Vale por:</h2>
+              <p style="font-size: 30px;">${product.name}</p>
+              <h2 style="font-size: 25px; margin-bottom: 5px;">Gracias por tu compra</h2>
+            </div>
+          `;
+        });
+      })
+      .join(""); // Unir todo el contenido en una sola cadena de HTML
+
+    // Insertar el contenido generado en el div oculto
+    printArea.innerHTML = allTicketsContent;
+
+    // Imprimir el contenido
+    const originalContent = document.body.innerHTML;
+    document.body.innerHTML = printArea.innerHTML;
+    window.print(); // Imprimir el contenido del área de tickets
+    document.body.innerHTML = originalContent; // Restaurar el contenido original después de la impresión
+  };
+
+  if (status === "approved") {
+    Swal.fire({
+      title: "¡Pago Exitoso!",
+      text: "Gracias por tu compra.",
+      icon: "success",
+      showConfirmButton: false,
+      timer: 1500,
+    }).then(() => {
+      setTimeout(() => {
+        printTickets(); // Imprimir tickets después de la alerta de éxito
+        window.location.reload();
+      }, 1000);
+    });
+  }
+};
+
 
   return (
     <div className="relative min-h-screen bg-gray-100 flex flex-col items-center py-10 bg-gray-300">
+      {/* Contenedor principal de productos */}
       <div className="mb-8 w-full max-w-5xl mx-auto px-4 lg:px-0">
         <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-400 py-3 px-6 rounded-lg inline-block">
           Productos
         </h1>
       </div>
 
-      <div className={`flex flex-col lg:flex-row w-full ${showQR ? "blur-md" : ""}`}>
+      <div className="flex flex-col lg:flex-row w-full">
         <div className="flex-1 grid grid-cols-1 gap-8 px-4 md:px-8 mt-20">
           {localProducts.map((product) => (
             <div
@@ -308,39 +234,18 @@ const handlePaymentResult = (status, paymentId) => {
           {selectedProducts.length > 0 && (
             <div className="mt-6">
               <button
-                className="bg-blue-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg shadow-lg hover:bg-blue-700 transition duration-300 w-full"
-                onClick={handlePayment}
+                className="bg-green-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg shadow-lg hover:bg-green-700 transition duration-300 w-full"
+                onClick={handleApprovedPayment}
               >
-                {paymentLoading ? "Generando enlace..." : `Comprar por $${totalAmount}`}
+                Pago aprobado
               </button>
             </div>
           )}
         </div>
       </div>
 
-      {showQR && paymentLink && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50">
-          <div className="relative bg-white p-6 rounded-lg shadow-lg w-11/12 sm:w-4/5 max-w-md h-auto">
-            <button
-              className="absolute -top-4 -right-4 text-red-500 hover:text-red-700 bg-white rounded-full p-2"
-              onClick={handleCloseQR}
-            >
-              <FontAwesomeIcon
-                icon={faTimes}
-                size="xl"
-                className="text-red-500 cursor-pointer transition-transform duration-200 hover:rotate-90"
-              />
-            </button>
-            <div className="flex justify-center items-center w-full">
-              <ReactQRCode
-                value={paymentLink}
-                size={450}
-                className="max-w-full h-auto"
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Div oculto para impresión */}
+      <div id="printArea" ref={printRef} style={{ display: 'none' }}></div>
     </div>
   );
 };
