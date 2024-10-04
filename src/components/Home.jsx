@@ -66,13 +66,9 @@ const Home = () => {
   // Manejar resultado del pago
 const handlePaymentResult = (status, paymentId) => {
   const printTickets = () => {
-    // Crear un nuevo documento dentro de la ventana de impresión
-    const printWindow = window.open('', '_blank', 'width=800,height=600');
-
-    // Crear el contenido de los tickets
     let allTicketsContent = selectedProducts
       .flatMap((product) => {
-        // Generar un ticket por cada unidad del producto
+        // Generar tantos tickets como cantidad de productos
         return Array.from({ length: product.quantity }).map(() => {
           return `
             <div class="ticket-container">
@@ -83,13 +79,21 @@ const handlePaymentResult = (status, paymentId) => {
           `;
         });
       })
-      .join(''); // Unir el contenido de todos los tickets
-
-    // Escribir el contenido en el documento de impresión
-    printWindow.document.write(`
+      .join(''); // Unir todos los tickets en un solo string de HTML
+  
+    // Crear un iframe temporal para manejar la impresión
+    const iframe = document.createElement("iframe");
+    document.body.appendChild(iframe); // Añadir iframe al DOM
+    iframe.style.position = "absolute";
+    iframe.style.width = "0px";
+    iframe.style.height = "0px";
+  
+    // Escribir el contenido HTML en el iframe
+    const doc = iframe.contentWindow.document;
+    doc.open();
+    doc.write(`
       <html>
         <head>
-          <title>Impresión de Tickets</title>
           <style>
             /* Estilos generales del ticket */
             body { margin: 0; padding: 0; }
@@ -117,21 +121,14 @@ const handlePaymentResult = (status, paymentId) => {
         <body>${allTicketsContent}</body>
       </html>
     `);
+    doc.close(); // Cerrar el documento después de escribir el contenido
 
-    // Cerrar el documento y enfocarse en la ventana de impresión
-    printWindow.document.close();
-    printWindow.focus();
-
-    // Ejecutar la impresión
-    printWindow.print();
-
-    // Cerrar la ventana de impresión después de que se complete
-    printWindow.onafterprint = () => {
-      printWindow.close();
-    };
+    // Ejecutar la impresión y luego eliminar el iframe
+    iframe.contentWindow.focus();
+    iframe.contentWindow.print();
+    document.body.removeChild(iframe);
   };
 
-  // Lógica del resultado de pago
   if (status === "approved") {
     Swal.fire({
       title: "¡Pago Exitoso!",
@@ -141,7 +138,7 @@ const handlePaymentResult = (status, paymentId) => {
       timer: 1500,
     }).then(() => {
       setTimeout(() => {
-        printTickets();
+        printTickets(); // Imprimir tickets después de la alerta de éxito
         window.location.reload();
       }, 1000);
     });
