@@ -1,0 +1,54 @@
+/* ticketStyles.css */
+body {
+  margin: 0;
+  padding: 0;
+}
+
+/* Eliminar márgenes superiores e inferiores de los contenedores */
+.ticket-container {
+  width: 10cm;
+  height: 6cm; /* Asegurar una altura específica */
+  margin: 0; /* Sin margen en el contenedor */
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* Centrar contenido verticalmente */
+  align-items: center;
+  box-sizing: border-box;
+  overflow: hidden;
+  page-break-inside: avoid; /* Evitar cortes en los tickets */
+  padding-left: 2cm; /* Ajusta este valor según lo necesites */
+}
+
+/* Estilos para los elementos dentro del ticket */
+.ticket-title,
+.ticket-item,
+.ticket-footer {
+  margin: 0;
+  padding: 0;
+  text-align: center;
+}
+
+/* Eliminar márgenes y padding en el título */
+.ticket-title {
+  font-size: 35px;
+  padding-bottom: 2px;
+}
+
+/* Control preciso del tamaño de la fuente del nombre del producto */
+.ticket-item {
+  font-size: 100px;
+  padding: 0;
+}
+
+/* Control sobre el footer para evitar cualquier espacio adicional */
+.ticket-footer {
+  font-size: 18px;
+  margin-top: 3px;
+  padding: 0;
+}
+
+/* Forzar sin margen entre tickets consecutivos */
+.ticket-container + .ticket-container {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
