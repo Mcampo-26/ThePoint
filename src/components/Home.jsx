@@ -64,49 +64,91 @@ const Home = () => {
   }, []);
 
   // Manejar resultado del pago
-  const handlePaymentResult = (status, paymentId) => {
-    const selectedProducts = localProducts.filter(
-      (product) => product.quantity > 0
-    );
+const handlePaymentResult = (status, paymentId) => {
+  const printTickets = () => {
+    // Crear un div temporal que contendrá los tickets
+    const printArea = document.createElement("div");
+    printArea.id = "printArea"; // Añadimos un ID para referencia
+    printArea.style.display = "none"; // Ocultarlo para que no afecte la UI actual
 
-    setPaymentStatus(status);
-    setPaymentId(paymentId);
+    // Generar el contenido de los tickets
+    let allTicketsContent = selectedProducts
+      .flatMap((product) => {
+        // Generar un ticket por cada unidad del producto
+        return Array.from({ length: product.quantity }).map(() => {
+          return `
+            <div class="ticket-container">
+              <h2 class="ticket-title">1x</h2>
+              <p class="ticket-item">${product.name}</p>
+              <h2 class="ticket-footer">Gracias por tu compra.</h2>
+            </div>
+          `;
+        });
+      })
+      .join(''); // Unir el contenido de todos los tickets
 
-    // Función para imprimir tickets
-    const printTickets = () => {
-      const ticketContent = selectedProducts.map((product) => `
-        <div style="width: 9cm; height: 9cm; margin: 0 auto; text-align: center; font-size: 90px;">
-          <h2 style="font-size: 30px; margin-top: -25px; margin-bottom: 5px;">Vale por</h2>
-          <p style="font-size: 68px;">${product.quantity} ${product.name}</p>
-          <h2 style="font-size: 10px;">Gracias por tu compra.</h2>
-        </div>
-      `).join('');
+    // Añadir el contenido generado al área de impresión
+    printArea.innerHTML = `
+      <html>
+        <head>
+          <style>
+            /* Estilos generales del ticket */
+            body { margin: 0; padding: 0; }
+            .ticket-container { 
+              width: 9cm;
+              height: 9cm; 
+              margin: 0 auto; 
+              text-align: center; 
+              font-size: 90px;
+              page-break-after: always; /* Separar cada ticket en una nueva página */
+            }
+            .ticket-title {
+              font-size: 35px;
+              margin-bottom: 5px;
+            }
+            .ticket-item {
+              font-size: 68px;
+              margin-bottom: 5px;
+            }
+            .ticket-footer {
+              font-size: 18px;
+            }
+          </style>
+        </head>
+        <body>${allTicketsContent}</body>
+      </html>
+    `;
 
-      const printArea = document.createElement("div");
-      printArea.innerHTML = ticketContent;
-      document.body.appendChild(printArea);
+    // Añadir el área de impresión al body del documento
+    document.body.appendChild(printArea);
 
-      const printWindow = window.print(); // Imprime el contenido de tickets
+    // Realizar la impresión
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(printArea.innerHTML);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
 
-      document.body.removeChild(printArea); // Elimina el área de impresión
-    };
-
-    if (status === "approved") {
-      Swal.fire({
-        title: "¡Pago Exitoso!",
-        text: "Gracias por tu compra.",
-        icon: "success",
-        showConfirmButton: false,
-        timer: 2000,
-      }).then(() => {
-        handleCloseQR();
-        setTimeout(() => {
-          printTickets();
-          window.location.reload();
-        }, 1000);
-      });
-    }
+    // Eliminar el div de impresión después de que se imprima
+    document.body.removeChild(printArea);
   };
+
+  // Lógica del resultado de pago
+  if (status === "approved") {
+    Swal.fire({
+      title: "¡Pago Exitoso!",
+      text: "Gracias por tu compra.",
+      icon: "success",
+      showConfirmButton: false,
+      timer: 1500,
+    }).then(() => {
+      setTimeout(() => {
+        printTickets();
+        window.location.reload();
+      }, 1000);
+    });
+  }
+};
 
   // Cerrar QR y resetear productos
   const handleCloseQR = () => {
