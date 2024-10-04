@@ -66,9 +66,10 @@ const Home = () => {
   // Manejar resultado del pago
 const handlePaymentResult = (status, paymentId) => {
   const printTickets = () => {
+    // Generar el contenido de los tickets
     let allTicketsContent = selectedProducts
       .flatMap((product) => {
-        // Generar tantos tickets como cantidad de productos
+        // Generar tantos tickets como la cantidad de productos
         return Array.from({ length: product.quantity }).map(() => {
           return `
             <div class="ticket-container">
@@ -79,23 +80,23 @@ const handlePaymentResult = (status, paymentId) => {
           `;
         });
       })
-      .join(''); // Unir todos los tickets en un solo string de HTML
-  
-    // Crear un iframe temporal para manejar la impresión
+      .join(''); // Unir todo el contenido en una sola cadena de HTML
+
+    // Crear un iframe temporal
     const iframe = document.createElement("iframe");
     document.body.appendChild(iframe); // Añadir iframe al DOM
     iframe.style.position = "absolute";
     iframe.style.width = "0px";
     iframe.style.height = "0px";
-  
-    // Escribir el contenido HTML en el iframe
-    const doc = iframe.contentWindow.document;
+    const iframeDoc = iframe.contentWindow || iframe.contentDocument;
+    const doc = iframeDoc.document;
+
+    // Escribir el contenido de los tickets en el iframe
     doc.open();
     doc.write(`
       <html>
         <head>
           <style>
-            /* Estilos generales del ticket */
             body { margin: 0; padding: 0; }
             .ticket-container { 
               width: 9cm;
@@ -121,14 +122,17 @@ const handlePaymentResult = (status, paymentId) => {
         <body>${allTicketsContent}</body>
       </html>
     `);
-    doc.close(); // Cerrar el documento después de escribir el contenido
+    doc.close(); // Cerrar el documento
 
-    // Ejecutar la impresión y luego eliminar el iframe
-    iframe.contentWindow.focus();
-    iframe.contentWindow.print();
-    document.body.removeChild(iframe);
+    // Asegurar que el contenido se ha cargado completamente antes de la impresión
+    iframe.onload = () => {
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+      document.body.removeChild(iframe); // Eliminar el iframe después de la impresión
+    };
   };
 
+  // Lógica del resultado de pago
   if (status === "approved") {
     Swal.fire({
       title: "¡Pago Exitoso!",
@@ -144,6 +148,7 @@ const handlePaymentResult = (status, paymentId) => {
     });
   }
 };
+
 
 
   // Cerrar QR y resetear productos
