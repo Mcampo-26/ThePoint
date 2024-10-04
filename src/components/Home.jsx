@@ -66,12 +66,10 @@ const Home = () => {
   // Manejar resultado del pago
 const handlePaymentResult = (status, paymentId) => {
   const printTickets = () => {
-    // Crear un div temporal que contendrá los tickets
-    const printArea = document.createElement("div");
-    printArea.id = "printArea"; // Añadimos un ID para referencia
-    printArea.style.display = "none"; // Ocultarlo para que no afecte la UI actual
+    // Crear un nuevo documento dentro de la ventana de impresión
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
 
-    // Generar el contenido de los tickets
+    // Crear el contenido de los tickets
     let allTicketsContent = selectedProducts
       .flatMap((product) => {
         // Generar un ticket por cada unidad del producto
@@ -87,10 +85,11 @@ const handlePaymentResult = (status, paymentId) => {
       })
       .join(''); // Unir el contenido de todos los tickets
 
-    // Añadir el contenido generado al área de impresión
-    printArea.innerHTML = `
+    // Escribir el contenido en el documento de impresión
+    printWindow.document.write(`
       <html>
         <head>
+          <title>Impresión de Tickets</title>
           <style>
             /* Estilos generales del ticket */
             body { margin: 0; padding: 0; }
@@ -117,20 +116,19 @@ const handlePaymentResult = (status, paymentId) => {
         </head>
         <body>${allTicketsContent}</body>
       </html>
-    `;
+    `);
 
-    // Añadir el área de impresión al body del documento
-    document.body.appendChild(printArea);
-
-    // Realizar la impresión
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(printArea.innerHTML);
+    // Cerrar el documento y enfocarse en la ventana de impresión
     printWindow.document.close();
     printWindow.focus();
+
+    // Ejecutar la impresión
     printWindow.print();
 
-    // Eliminar el div de impresión después de que se imprima
-    document.body.removeChild(printArea);
+    // Cerrar la ventana de impresión después de que se complete
+    printWindow.onafterprint = () => {
+      printWindow.close();
+    };
   };
 
   // Lógica del resultado de pago
@@ -149,6 +147,7 @@ const handlePaymentResult = (status, paymentId) => {
     });
   }
 };
+
 
   // Cerrar QR y resetear productos
   const handleCloseQR = () => {
