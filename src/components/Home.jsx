@@ -70,8 +70,7 @@ const Home = () => {
   // Función para manejar el estado del pago
   // Función para manejar el resultado del pago y resetear productos
 
-  c
-  
+
   
 
 // Función para manejar el resultado del pago y resetear productos
