@@ -82,60 +82,59 @@ const Home = () => {
   };
 
   // Función para generar los tickets en el div oculto
- const handlePaymentResult = (status, paymentId) => {
-  const printTickets = () => {
-    const printArea = document.getElementById("printArea");
-    let allTicketsContent = selectedProducts
-      .flatMap((product) => {
-        // Generar un ticket por cada unidad del producto
-        return Array.from({ length: product.quantity }).map(() => {
-          return `
-            <div
-              style="
-                width: 8cm; /* Ajusta el ancho a 8 cm */
-                height: 8cm; /* Ajusta la altura a 8 cm */
-                padding: 5px; /* Mantén un pequeño padding */
-                text-align: center;
-                font-size: 25px; /* Aumenta el tamaño de la fuente */
-                border: 1px solid #000; /* Mantén el borde para referencia visual */
-                margin-bottom: 10px; /* Espacio entre tickets */
-              "
-            >
-              <h2 style="font-size: 25px; margin-bottom: 5px;">Vale por:</h2>
-              <p style="font-size: 30px;">${product.name}</p>
-              <h2 style="font-size: 25px; margin-bottom: 5px;">Gracias por tu compra</h2>
-            </div>
-          `;
-        });
-      })
-      .join(""); // Unir todo el contenido en una sola cadena de HTML
+  const handlePaymentResult = (status, paymentId) => {
+    const printTickets = () => {
+      const printArea = document.getElementById("printArea");
+      let allTicketsContent = selectedProducts
+        .flatMap((product) => {
+          // Generar un ticket por cada unidad del producto
+          return Array.from({ length: product.quantity }).map(() => {
+            return `
+              <div
+                style="
+                  width: 8cm; /* Ajusta el ancho a 8 cm */
+                  height: 8cm; /* Ajusta la altura a 8 cm */
+                  padding: 5px; /* Mantén un pequeño padding */
+                  text-align: center;
+                  font-size: 25px; /* Aumenta el tamaño de la fuente */
+                  border: 1px solid #000; /* Mantén el borde para referencia visual */
+                  margin-bottom: 10px; /* Espacio entre tickets */
+                "
+              >
+                <h2 style="font-size: 25px; margin-bottom: 5px;">Vale por:</h2>
+                <p style="font-size: 30px;">${product.name}</p>
+                <h2 style="font-size: 25px; margin-bottom: 5px;">Gracias por tu compra</h2>
+              </div>
+            `;
+          });
+        })
+        .join(""); // Unir todo el contenido en una sola cadena de HTML
 
-    // Insertar el contenido generado en el div oculto
-    printArea.innerHTML = allTicketsContent;
+      // Insertar el contenido generado en el div oculto
+      printArea.innerHTML = allTicketsContent;
 
-    // Imprimir el contenido
-    const originalContent = document.body.innerHTML;
-    document.body.innerHTML = printArea.innerHTML;
-    window.print(); // Imprimir el contenido del área de tickets
-    document.body.innerHTML = originalContent; // Restaurar el contenido original después de la impresión
+      // Imprimir el contenido
+      const originalContent = document.body.innerHTML;
+      document.body.innerHTML = printArea.innerHTML;
+      window.print(); // Imprimir el contenido del área de tickets
+      document.body.innerHTML = originalContent; // Restaurar el contenido original después de la impresión
+    };
+
+    if (status === "approved") {
+      Swal.fire({
+        title: "¡Pago Exitoso!",
+        text: "Gracias por tu compra.",
+        icon: "success",
+        showConfirmButton: false,
+        timer: 1500,
+      }).then(() => {
+        setTimeout(() => {
+          printTickets(); // Imprimir tickets después de la alerta de éxito
+          window.location.reload();
+        }, 1000);
+      });
+    }
   };
-
-  if (status === "approved") {
-    Swal.fire({
-      title: "¡Pago Exitoso!",
-      text: "Gracias por tu compra.",
-      icon: "success",
-      showConfirmButton: false,
-      timer: 1500,
-    }).then(() => {
-      setTimeout(() => {
-        printTickets(); // Imprimir tickets después de la alerta de éxito
-        window.location.reload();
-      }, 1000);
-    });
-  }
-};
-
 
   return (
     <div className="relative min-h-screen bg-gray-100 flex flex-col items-center py-10 bg-gray-300">
@@ -245,7 +244,7 @@ const Home = () => {
       </div>
 
       {/* Div oculto para impresión */}
-      <div id="printArea" ref={printRef} style={{ display: 'none' }}></div>
+      <div id="printArea" ref={printRef} style={{ display: "none" }}></div>
     </div>
   );
 };
