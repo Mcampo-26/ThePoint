@@ -7,7 +7,7 @@ import ReactQRCode from "react-qr-code";
 import Swal from "sweetalert2";
 import io from "socket.io-client";
 
-// URL de tu servidor WebSocket en Heroku
+// URL de tu servidor WebSocket en Heroku (asegúrate de que el backend esté correctamente configurado)
 const socket = io("https://thepointback-03939a97aeeb.herokuapp.com", {
   transports: ["websocket"],
   reconnectionAttempts: 5, // Número de intentos de reconexión
@@ -23,10 +23,12 @@ const Home = () => {
   const [paymentId, setPaymentId] = useState(null); // ID del pago
   const printRef = useRef(null); // Para acceder al contenido del ticket de forma oculta
 
+  // Obtener productos al cargar el componente
   useEffect(() => {
-    fetchProducts(); // Obtener productos al cargar el componente
+    fetchProducts(); // Se obtienen los productos cuando se monta el componente
   }, [fetchProducts]);
 
+  // Actualizar productos cuando detectamos que hay una actualización pendiente
   useEffect(() => {
     if (needsUpdate) {
       fetchProducts(); // Volver a obtener los productos si hay cambios
@@ -34,6 +36,7 @@ const Home = () => {
     }
   }, [needsUpdate, fetchProducts, setNeedsUpdate]);
 
+  // Sincronizar productos locales con el estado global
   useEffect(() => {
     const initializedProducts = products.map((product) => ({
       ...product,
@@ -123,6 +126,10 @@ const Home = () => {
         }, 1000);
       });
     }
+  };
+
+  const handleCloseQR = () => {
+    setShowQR(false); // Cierra el modal del QR
   };
 
   const incrementQuantity = (id) => {
@@ -262,13 +269,11 @@ const Home = () => {
                 ))}
               </ul>
 
-              <div className="mt-4 border-t pt-4 flex justify-between font-bold">
-                <span>Total de productos:</span>
-                <span>
-                  {totalProducts} {formatUnits(totalProducts)}
-                </span>
-              </div>
               <div className="mt-4 border-t pt-4 flex justify_between font-bold">
+                <span>Total de productos:</span>
+                <span>{totalProducts} {formatUnits(totalProducts)}</span>
+              </div>
+              <div className="mt-4 border-t pt-4 flex justify-between font-bold">
                 <span>Total a pagar:</span>
                 <span>${totalAmount}</span>
               </div>
@@ -299,7 +304,7 @@ const Home = () => {
           <div className="relative bg-white p-6 rounded-lg shadow-lg w-11/12 sm:w-4/5 max-w-md h-auto">
             <button
               className="absolute -top-4 -right-4 text-red-500 hover:text-red-700 bg-white rounded-full p-2"
-              onClick={handleCloseQR} // Llamar a handleCloseQR para cerrar el modal y resetear los productos
+              onClick={handleCloseQR}
             >
               <FontAwesomeIcon
                 icon={faTimes}
