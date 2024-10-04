@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
+
+import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash, faTimes } from "@fortawesome/free-solid-svg-icons";
 import { usePaymentStore } from "../store/usePaymentStore";
@@ -62,6 +63,7 @@ const Home = () => {
     };
   }, []);
 
+  // Función para manejar el resultado del pago
   const handlePaymentResult = (status, paymentId) => {
     const selectedProducts = localProducts.filter(
       (product) => product.quantity > 0
@@ -70,40 +72,10 @@ const Home = () => {
     setPaymentStatus(status);
     setPaymentId(paymentId);
 
-    // Función para imprimir los tickets
-    const printTickets = () => {
-      let ticketContent = selectedProducts
-        .map(
-          (product) => `
-            <div class="ticket-container">
-              <h2 class="ticket-title">Vale por</h2>
-              <p class="ticket-item">${product.quantity} ${
-            product.quantity === 1 ? product.name : product.name + "s"
-          }</p>
-              <h2 class="ticket-footer">Gracias por tu compra.</h2>
-            </div>`
-        )
-        .join(""); // Unir todos los tickets en uno
-
-      const printWindow = window.open("", "", "width=300,height=300");
-      printWindow.document.write(`
-        <html>
-          <head>
-            <style>
-              body { margin: 0; padding: 0; text-align: center; font-size: 12px; }
-              .ticket-container { width: 100%; text-align: center; font-size: 14px; margin-bottom: 10px; }
-              .ticket-title { font-size: 35px; margin: 5px 0; }
-              .ticket-item { font-size: 25px; margin: 5px 0; }
-              .ticket-footer { font-size: 18px; margin-top: 10px; }
-            </style>
-          </head>
-          <body onload="window.print();window.close()">
-            ${ticketContent}
-          </body>
-        </html>
-      `);
-
-      printWindow.document.close();
+    // Función para imprimir el ticket en el cuadro de impresión actual
+    const printTicket = () => {
+      const printArea = document.getElementById("printArea");
+      window.print();
     };
 
     if (status === "approved") {
@@ -114,14 +86,12 @@ const Home = () => {
         showConfirmButton: false,
         timer: 2000,
       }).then(() => {
-        handleCloseQR();
-        setTimeout(() => {
-          printTickets();
-        }, 1000);
+        printTicket(); // Imprime el ticket después de que el pago es exitoso
       });
     }
   };
 
+  // Función para cerrar el modal del QR
   const handleCloseQR = () => {
     setShowQR(false);
   };
@@ -317,6 +287,17 @@ const Home = () => {
           </div>
         </div>
       )}
+
+      {/* Área oculta para imprimir el ticket */}
+      <div id="printArea" style={{ display: "none" }}>
+        <h2>Vale por:</h2>
+        {selectedProducts.map((product) => (
+          <p key={product._id}>
+            {product.quantity} {product.name}
+          </p>
+        ))}
+        <h2>Gracias por tu compra</h2>
+      </div>
     </div>
   );
 };
