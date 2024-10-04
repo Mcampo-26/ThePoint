@@ -67,135 +67,11 @@ const Home = () => {
     };
   }, []);
 
-  // Función para manejar el estado del pago y resetear productos
-  const handlePaymentResult = (status, paymentId) => {
-    const selectedProducts = localProducts.filter(
-      (product) => product.quantity > 0
-    );
+  // Función para manejar el estado del pago
+  // Función para manejar el resultado del pago y resetear productos
 
-    setPaymentStatus(status);
-    setPaymentId(paymentId);
-
-    // Función para imprimir los tickets con estilos actualizados
-    const printTickets = () => {
-      selectedProducts.forEach((product) => {
-        const ticketContent = `
-          <div class="ticket-container">
-            <h2 class="ticket-title">1x</h2>
-            <p class="ticket-item">${product.quantity} ${
-          product.quantity === 1 ? product.name : product.name + "s"
-        }</p>
-            <h2 class="ticket-footer">Gracias por tu compra.</h2>
-          </div>
-        `;
-
-        // Crear un iframe temporal para manejar la impresión
-        const printWindow = window.open("", "", "width=900,height=900");
-        printWindow.document.write(`
-          <html>
-            <head>
-              <title>Imprimir ticket</title>
-              <style>
-                body {
-                  margin: 0;
-                  padding: 0;
-                }
-                .ticket-container {
-                  width: 10cm;
-                  height: 7cm;
-                  margin: 0 auto;
-                  text-align: center;
-                  font-size: 90px;
-                  display: flex;
-                  flex-direction: column;
-                  justify-content: center;
-                  align-items: center;
-                  box-sizing: border-box;
-                  padding-left: 1.5cm;
-                  page-break-inside: avoid;
-                }
-                .ticket-title {
-                  font-size: 35px;
-                  padding-bottom: 2px;
-                }
-                .ticket-item {
-                  font-size: 100px;
-                }
-                .ticket-footer {
-                  font-size: 18px;
-                  margin-top: 3px;
-                }
-                .ticket-container + .ticket-container {
-                  margin-top: 0 !important;
-                  padding-top: 0 !important;
-                }
-              </style>
-            </head>
-            <body>${ticketContent}</body>
-          </html>
-        `);
-
-        printWindow.document.close(); // Cerrar el documento para asegurar que el contenido esté listo
-        printWindow.focus(); // Asegurarse de que la ventana de impresión esté enfocada
-        printWindow.print(); // Iniciar la impresión
-        printWindow.close(); // Cerrar la ventana de impresión después de que se complete
-      });
-    };
-
-    // Mostrar el SweetAlert según el estado del pago
-    if (status === "approved") {
-      Swal.fire({
-        title: "¡Pago Exitoso!",
-        text: "Gracias por tu compra.",
-        icon: "success",
-        showConfirmButton: false, // Sin botón de confirmación
-        timer: 2000, // Se cierra automáticamente en 2 segundos
-      }).then(() => {
-        handleCloseQR(); // Cerrar QR antes de imprimir
-        setTimeout(() => {
-          printTickets(); // Imprimir tickets por cada producto
-          window.location.reload(); // Recargar la página después de imprimir
-        }, 1000);
-      });
-    } else if (status === "pending") {
-      Swal.fire({
-        title: "Pago Pendiente",
-        text: "Tu pago está pendiente de confirmación.",
-        icon: "info",
-        showConfirmButton: false, // Sin botón de confirmación
-        timer: 3000, // Se cierra automáticamente en 3 segundos
-      }).then(() => {
-        handleCloseQR(); // Cerrar QR antes de imprimir
-        setTimeout(() => {
-          printTickets(); // Imprimir ticket en estado pendiente
-          window.location.reload(); // Recargar la página después de imprimir
-        }, 1000);
-      });
-    } else if (status === "failure") {
-      Swal.fire({
-        title: "Pago Rechazado",
-        text: "Tu pago no pudo ser procesado.",
-        icon: "error",
-        showConfirmButton: false, // Sin botón de confirmación
-        timer: 3000, // Se cierra automáticamente en 3 segundos
-      }).then(() => {
-        handleCloseQR(); // Cerrar QR antes de imprimir
-        setTimeout(() => {
-          printTickets(); // Imprimir ticket en estado fallido
-          window.location.reload(); // Recargar la página después de imprimir
-        }, 1000);
-      });
-    }
-  };
-
-  // Función para cerrar el modal del QR y resetear productos
-  const handleCloseQR = () => {
-    setShowQR(false); // Cerrar el modal del QR
-  };
-
-  // Función que resetea todo: productos, estado del pago y QR
   const resetAll = () => {
-    setLocalProducts((prevProducts) =>
+    setLocalProducts((prevProducts) => 
       prevProducts.map((product) => ({
         ...product,
         quantity: 0, // Resetea la cantidad de todos los productos
@@ -203,7 +79,76 @@ const Home = () => {
     );
     setPaymentStatus(null); // Resetea el estado del pago
     setPaymentId(null); // Resetea el ID de la orden
+    setShowQR(false); // Cierra el modal del QR
   };
+  
+  
+  // Función para manejar el resultado del pago y resetear productos
+  const handlePaymentResult = (status, paymentId) => {
+    const selectedProducts = localProducts.filter(
+      (product) => product.quantity > 0
+    );
+  
+    setPaymentStatus(status);
+    setPaymentId(paymentId);
+  
+    // Función para imprimir el ticket
+    const printTicket = () => {
+      const printArea = document.getElementById("printArea");
+      const originalContent = document.body.innerHTML;
+  
+      document.body.innerHTML = printArea.innerHTML;
+      window.print();
+      document.body.innerHTML = originalContent;
+  
+      // Mostrar el mensaje después de la impresión
+      Swal.fire({
+        title: "Gracias por tu compra!",
+        text: "Se ha completado exitosamente.",
+        icon: "success",
+      }).then(() => {
+        resetAll(); // Aquí reseteamos todo después del mensaje
+      });
+    };
+  
+    // Mostrar el SweetAlert según el estado del pago
+    if (status === "approved") {
+      Swal.fire({
+        title: "¡Pago Exitoso!",
+        text: "Gracias por tu compra.",
+        icon: "success",
+        confirmButtonText: "OK",
+      }).then(() => {
+        printTicket(); // Imprimir ticket después de SweetAlert
+      });
+    } else if (status === "pending") {
+      Swal.fire({
+        title: "Pago Pendiente",
+        text: "Tu pago está pendiente de confirmación.",
+        icon: "info",
+        confirmButtonText: "OK",
+      }).then(() => {
+        printTicket(); // Imprimir ticket en estado pendiente
+      });
+    } else if (status === "failure") {
+      Swal.fire({
+        title: "Pago Rechazado",
+        text: "Tu pago no pudo ser procesado.",
+        icon: "error",
+        confirmButtonText: "OK",
+      }).then(() => {
+        printTicket(); // Imprimir ticket en estado fallido
+      });
+    }
+  };
+  
+  // Función para cerrar el modal del QR y poner en cero los productos
+  const handleCloseQR = () => {
+    setShowQR(false);
+    resetAll(); // Poner en cero todos los productos y resetear la orden
+  };
+  
+  
 
   const incrementQuantity = (id) => {
     setLocalProducts(
@@ -230,6 +175,16 @@ const Home = () => {
       localProducts.map((product) =>
         product._id === id ? { ...product, quantity: 0 } : product
       )
+    );
+  };
+
+  // Función para poner en cero todos los productos
+  const resetProducts = () => {
+    setLocalProducts(
+      localProducts.map((product) => ({
+        ...product,
+        quantity: 0,
+      }))
     );
   };
 
@@ -260,6 +215,9 @@ const Home = () => {
       console.error("Error al generar el enlace de pago:", error);
     }
   };
+
+  // Función para cerrar el modal del QR y poner en cero los productos
+
 
   return (
     <div className="relative min-h-screen bg-gray-100 flex flex-col items-center py-10 bg-gray-300">
@@ -348,7 +306,7 @@ const Home = () => {
                   {totalProducts} {formatUnits(totalProducts)}
                 </span>
               </div>
-              <div className="mt-4 border-t pt-4 flex justify_between font-bold">
+              <div className="mt-4 border-t pt-4 flex justify-between font-bold">
                 <span>Total a pagar:</span>
                 <span>${totalAmount}</span>
               </div>
@@ -397,6 +355,27 @@ const Home = () => {
           </div>
         </div>
       )}
+
+      {/* Div oculto para imprimir el ticket */}
+      <div id="printArea" style={{ display: "none" }}>
+  <div
+    style={{
+      width: "8cm", // Ajusta el ancho a 5 cm
+      height: "8cm", // Ajusta la altura a 5 cm
+      padding: "5px", // Mantén un pequeño padding
+      textAlign: "center",
+      fontSize: "25px", // Aumenta el tamaño de la fuente
+      border: "1px solid #000", // Mantén el borde para referencia visual
+    }}
+  >
+    <h2 style={{ fontSize: "25px", marginBottom: "5px" }}>Vale por:</h2> {/* Título con fuente más grande */}
+    <p style={{ fontSize: "30px" }}>
+    <h2 style={{ fontSize: "25px", marginBottom: "5px" }}>Gracias por tu compra</h2>      
+      {selectedProducts.map((product) => product.name).join(", ")}
+    </p>
+  </div>
+</div>
+
     </div>
   );
 };
