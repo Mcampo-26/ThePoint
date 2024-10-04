@@ -1,32 +1,19 @@
-
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash, faTimes } from "@fortawesome/free-solid-svg-icons";
-import { usePaymentStore } from "../store/usePaymentStore";
 import { useProductStore } from "../store/useProductStore";
-import ReactQRCode from "react-qr-code";
 import Swal from "sweetalert2";
-import io from "socket.io-client";
-
-// URL de tu servidor WebSocket en Heroku
-const socket = io("https://thepointback-03939a97aeeb.herokuapp.com", {
-  transports: ["websocket"],
-  reconnectionAttempts: 5, // Número de intentos de reconexión
-  reconnectionDelay: 3000, // Retraso entre intentos de reconexión
-});
+import "./css/Ticket.css"; // Importamos los estilos del ticket
 
 const Home = () => {
-  const { createPaymentLink, paymentLink, paymentLoading } = usePaymentStore();
   const { products, fetchProducts, needsUpdate, setNeedsUpdate } =
     useProductStore();
+  const [localProducts, setLocalProducts] = useState([]);
   const [showQR, setShowQR] = useState(false);
-  const [localProducts, setLocalProducts] = useState([]); // Para gestionar cantidades de productos seleccionados
-  const [paymentStatus, setPaymentStatus] = useState(null); // Estado del pago
-  const [paymentId, setPaymentId] = useState(null); // ID del pago
+  const hiddenTicketRef = useRef(null);
 
-  // Obtener productos al cargar el componente
   useEffect(() => {
-    fetchProducts();
+    fetchProducts(); // Obtener productos
   }, [fetchProducts]);
 
   useEffect(() => {
@@ -39,62 +26,10 @@ const Home = () => {
   useEffect(() => {
     const initializedProducts = products.map((product) => ({
       ...product,
-      quantity: 0, // Inicializa la cantidad en 0 para cada producto
+      quantity: 0, // Inicializamos con cantidad 0
     }));
     setLocalProducts(initializedProducts);
   }, [products]);
-
-  useEffect(() => {
-    socket.on("connect", () => {
-      console.log("Conectado al servidor WebSocket");
-    });
-
-    socket.on("paymentSuccess", ({ status, paymentId }) => {
-      handlePaymentResult(status, paymentId);
-    });
-
-    socket.on("disconnect", () => {
-      console.log("Desconectado del servidor WebSocket");
-    });
-
-    return () => {
-      socket.off("paymentSuccess");
-      socket.disconnect();
-    };
-  }, []);
-
-  // Función para manejar el resultado del pago
-  const handlePaymentResult = (status, paymentId) => {
-    const selectedProducts = localProducts.filter(
-      (product) => product.quantity > 0
-    );
-
-    setPaymentStatus(status);
-    setPaymentId(paymentId);
-
-    // Función para imprimir el ticket en el cuadro de impresión actual
-    const printTicket = () => {
-      const printArea = document.getElementById("printArea");
-      window.print();
-    };
-
-    if (status === "approved") {
-      Swal.fire({
-        title: "¡Pago Exitoso!",
-        text: "Gracias por tu compra.",
-        icon: "success",
-        showConfirmButton: false,
-        timer: 2000,
-      }).then(() => {
-        printTicket(); // Imprime el ticket después de que el pago es exitoso
-      });
-    }
-  };
-
-  // Función para cerrar el modal del QR
-  const handleCloseQR = () => {
-    setShowQR(false);
-  };
 
   const incrementQuantity = (id) => {
     setLocalProducts(
@@ -142,13 +77,67 @@ const Home = () => {
     return quantity === 1 ? "unidad" : "unidades";
   };
 
-  const handlePayment = async () => {
-    const productName = "La Previa";
-    try {
-      await createPaymentLink(productName, totalAmount);
-      setShowQR(true);
-    } catch (error) {
-      console.error("Error al generar el enlace de pago:", error);
+  const handleApprovedPayment = () => {
+    const paymentResult = { status: "approved", paymentId: "fakePaymentId12345" };
+    handlePaymentResult(paymentResult.status, paymentResult.paymentId);
+  };
+
+  // Función para determinar si usar "un" o "una"
+  const getArticle = (productName) => {
+    return `<span class="product-name">${productName}</span>`;
+  };
+
+  // Función para manejar el resultado del pago e imprimir los tickets
+  const handlePaymentResult = (status, paymentId) => {
+    const printTickets = () => {
+      let allTicketsContent = selectedProducts
+        .flatMap((product) => {
+          return Array.from({ length: product.quantity }).map(() => {
+            return `
+              <div class="ticket-container">
+                <h2 class="ticket-title">1x</h2>
+                <p class="ticket-item">${getArticle(product.name)}</p>
+                <h2 class="ticket-footer">Gracias por tu compra.</h2>
+              </div>
+            `;
+          });
+        })
+        .join(''); // Eliminar cualquier espacio entre tickets
+  
+      const iframe = document.createElement("iframe");
+      document.body.appendChild(iframe);
+      iframe.style.position = "absolute";
+      iframe.style.width = "0px";
+      iframe.style.height = "0px";
+      const doc = iframe.contentWindow.document;
+      doc.open();
+      doc.write(`
+        <html>
+          <head>
+            <link rel="stylesheet" type="text/css" href="ticketStyles.css">
+          </head>
+          <body>${allTicketsContent}</body>
+        </html>
+      `);
+      doc.close();
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+      document.body.removeChild(iframe);
+    };
+
+    if (status === "approved") {
+      Swal.fire({
+        title: "¡Pago Exitoso!",
+        text: "Gracias por tu compra.",
+        icon: "success",
+        showConfirmButton: false,
+        timer: 1500,
+      }).then(() => {
+        setTimeout(() => {
+          printTickets();
+          window.location.reload();
+        }, 1000);
+      });
     }
   };
 
@@ -160,11 +149,7 @@ const Home = () => {
         </h1>
       </div>
 
-      <div
-        className={`flex flex-col lg:flex-row w-full ${
-          showQR ? "blur-md" : ""
-        }`}
-      >
+      <div className="flex flex-col lg:flex-row w-full">
         <div className="flex-1 grid grid-cols-1 gap-8 px-4 md:px-8 mt-20">
           {localProducts.map((product) => (
             <div
@@ -252,51 +237,14 @@ const Home = () => {
           {selectedProducts.length > 0 && (
             <div className="mt-6">
               <button
-                className="bg-blue-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg shadow-lg hover:bg-blue-700 transition duration-300 w-full"
-                onClick={handlePayment}
+                className="bg-green-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg shadow-lg hover:bg-green-700 transition duration-300 w-full"
+                onClick={handleApprovedPayment} // Botón para simular pago aprobado
               >
-                {paymentLoading
-                  ? "Generando enlace..."
-                  : `Comprar por $${totalAmount}`}
+                Pago aprobado
               </button>
             </div>
           )}
         </div>
-      </div>
-
-      {showQR && paymentLink && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50">
-          <div className="relative bg-white p-6 rounded-lg shadow-lg w-11/12 sm:w-4/5 max-w-md h-auto">
-            <button
-              className="absolute -top-4 -right-4 text-red-500 hover:text-red-700 bg-white rounded-full p-2"
-              onClick={handleCloseQR}
-            >
-              <FontAwesomeIcon
-                icon={faTimes}
-                size="xl"
-                className="text-red-500 cursor-pointer transition-transform duration-200 hover:rotate-90"
-              />
-            </button>
-            <div className="flex justify-center items-center w-full">
-              <ReactQRCode
-                value={paymentLink}
-                size={450}
-                className="max-w-full h-auto"
-              />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Área oculta para imprimir el ticket */}
-      <div id="printArea" style={{ display: "none" }}>
-        <h2>Vale por:</h2>
-        {selectedProducts.map((product) => (
-          <p key={product._id}>
-            {product.quantity} {product.name}
-          </p>
-        ))}
-        <h2>Gracias por tu compra</h2>
       </div>
     </div>
   );
