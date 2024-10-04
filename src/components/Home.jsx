@@ -347,43 +347,50 @@ const Home = () => {
 
       {/* Div oculto para imprimir el ticket */}
       <div id="printArea" style={{ display: "none" }}>
-        <div
-          style={{
-            width: "9cm",
-            height: "9cm",
-            margin: "0 auto", // Centramos horizontalmente
-            position: "relative", // Permite ajustar con left
-            left: "-2cm", // Mueve el contenido hacia la izquierda
-            padding: "0",
-            textAlign: "center",
-            fontSize: "90px",
-          }}
-        >
-          {/* Ajusta marginTop para subir todo el contenido */}
-          <h2
-            style={{
-              fontSize: "30px",
-              marginTop: "-25x", // Reduce el margen superior para subir el contenido
-              marginBottom: "5px", // También ajusta el margen inferior para no dejar espacio extra
-            }}
-          >
-            Vale por
-          </h2>
-          <p style={{ fontSize: "68px", marginleft: "5px" }}>
-            {products.length > 0
-              ? products[0].name.replace(/[0-9]/g, "")
-              : "Producto no disponible"}
-          </p>
-          <h2
-            style={{
-              fontSize: "10px",
-             
-            }}
-          >
-            gracias por tu compra..
-          </h2>
-        </div>
+  <div
+    style={{
+      width: "9cm",
+      height: "9cm",
+      margin: "0 auto",
+      position: "relative",
+      left: "-2cm",
+      padding: "0",
+      textAlign: "center",
+      fontSize: "90px",
+    }}
+  >
+    <h2
+      style={{
+        fontSize: "30px",
+        marginTop: "-25px", // Ajusta el margen superior
+        marginBottom: "5px", // Ajusta el margen inferior
+      }}
+    >
+      Vale por:
+    </h2>
+
+    {/* Mostrar el nombre y la cantidad de cada producto seleccionado */}
+    {selectedProducts.map((product) => (
+      <div key={product._id} style={{ marginBottom: "10px" }}>
+        <p style={{ fontSize: "68px", marginLeft: "5px" }}>
+          {product.quantity}{" "}
+          {product.quantity === 1
+            ? product.name.replace(/[0-9]/g, "") // Singular si es 1
+            : product.name.replace(/[0-9]/g, "") + "s"} {/* Plural si es más de 1 */}
+        </p>
       </div>
+    ))}
+
+    <h2
+      style={{
+        fontSize: "10px",
+      }}
+    >
+      Gracias por tu compra.
+    </h2>
+  </div>
+</div>
+
     </div>
   );
 };
