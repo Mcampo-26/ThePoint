@@ -7,7 +7,7 @@ import ReactQRCode from "react-qr-code";
 import Swal from "sweetalert2";
 import io from "socket.io-client";
 
-// URL de tu servidor WebSocket en Heroku (asegúrate de que el backend esté correctamente configurado)
+// URL de tu servidor WebSocket en Heroku
 const socket = io("https://thepointback-03939a97aeeb.herokuapp.com", {
   transports: ["websocket"],
   reconnectionAttempts: 5, // Número de intentos de reconexión
@@ -22,22 +22,19 @@ const Home = () => {
   const [localProducts, setLocalProducts] = useState([]); // Para gestionar cantidades de productos seleccionados
   const [paymentStatus, setPaymentStatus] = useState(null); // Estado del pago
   const [paymentId, setPaymentId] = useState(null); // ID del pago
-  const hiddenTicketRef = useRef(null); // Para acceder al contenido del ticket de forma oculta
 
   // Obtener productos al cargar el componente
   useEffect(() => {
-    fetchProducts(); // Se obtienen los productos cuando se monta el componente
+    fetchProducts();
   }, [fetchProducts]);
 
-  // Actualizar productos cuando detectamos que hay una actualización pendiente
   useEffect(() => {
     if (needsUpdate) {
-      fetchProducts(); // Volver a obtener los productos si hay cambios
-      setNeedsUpdate(false); // Restablecer la bandera después de la actualización
+      fetchProducts();
+      setNeedsUpdate(false);
     }
   }, [needsUpdate, fetchProducts, setNeedsUpdate]);
 
-  // Sincronizar productos locales con el estado global
   useEffect(() => {
     const initializedProducts = products.map((product) => ({
       ...product,
@@ -46,109 +43,88 @@ const Home = () => {
     setLocalProducts(initializedProducts);
   }, [products]);
 
-  // Conectar al servidor WebSocket y escuchar eventos
   useEffect(() => {
     socket.on("connect", () => {
       console.log("Conectado al servidor WebSocket");
     });
 
     socket.on("paymentSuccess", ({ status, paymentId }) => {
-      handlePaymentResult(status, paymentId); // Usa la función para manejar el resultado del pago
+      handlePaymentResult(status, paymentId);
     });
 
     socket.on("disconnect", () => {
       console.log("Desconectado del servidor WebSocket");
     });
 
-    // Limpiar el listener cuando el componente se desmonta
     return () => {
       socket.off("paymentSuccess");
-      socket.disconnect(); // Desconectar el socket cuando el componente se desmonte
+      socket.disconnect();
     };
   }, []);
 
-  // Función para manejar el estado del pago
-  // Función para manejar el resultado del pago y resetear productos
-
-  const resetAll = () => {
-    setLocalProducts((prevProducts) => 
-      prevProducts.map((product) => ({
-        ...product,
-        quantity: 0, // Resetea la cantidad de todos los productos
-      }))
-    );
-    setPaymentStatus(null); // Resetea el estado del pago
-    setPaymentId(null); // Resetea el ID de la orden
-    setShowQR(false); // Cierra el modal del QR
-  };
-  
-  
-  // Función para manejar el resultado del pago y resetear productos
   const handlePaymentResult = (status, paymentId) => {
     const selectedProducts = localProducts.filter(
       (product) => product.quantity > 0
     );
-  
+
     setPaymentStatus(status);
     setPaymentId(paymentId);
-  
-    // Función para imprimir el ticket
-    const printTicket = () => {
-      const printArea = document.getElementById("printArea");
-      const originalContent = document.body.innerHTML;
-  
-      document.body.innerHTML = printArea.innerHTML;
-      window.print();
-      document.body.innerHTML = originalContent;
-  
-      // Mostrar el mensaje después de la impresión
-      Swal.fire({
-        title: "Gracias por tu compra!",
-        text: "Se ha completado exitosamente.",
-        icon: "success",
-      }).then(() => {
-        resetAll(); // Aquí reseteamos todo después del mensaje
-      });
+
+    // Función para imprimir los tickets
+    const printTickets = () => {
+      let ticketContent = selectedProducts
+        .map(
+          (product) => `
+            <div class="ticket-container">
+              <h2 class="ticket-title">Vale por</h2>
+              <p class="ticket-item">${product.quantity} ${
+            product.quantity === 1 ? product.name : product.name + "s"
+          }</p>
+              <h2 class="ticket-footer">Gracias por tu compra.</h2>
+            </div>`
+        )
+        .join(""); // Unir todos los tickets en uno
+
+      const printWindow = window.open("", "", "width=300,height=300");
+      printWindow.document.write(`
+        <html>
+          <head>
+            <style>
+              body { margin: 0; padding: 0; text-align: center; font-size: 12px; }
+              .ticket-container { width: 100%; text-align: center; font-size: 14px; margin-bottom: 10px; }
+              .ticket-title { font-size: 35px; margin: 5px 0; }
+              .ticket-item { font-size: 25px; margin: 5px 0; }
+              .ticket-footer { font-size: 18px; margin-top: 10px; }
+            </style>
+          </head>
+          <body onload="window.print();window.close()">
+            ${ticketContent}
+          </body>
+        </html>
+      `);
+
+      printWindow.document.close();
     };
-  
-    // Mostrar el SweetAlert según el estado del pago
+
     if (status === "approved") {
       Swal.fire({
         title: "¡Pago Exitoso!",
         text: "Gracias por tu compra.",
         icon: "success",
-        confirmButtonText: "OK",
+        showConfirmButton: false,
+        timer: 2000,
       }).then(() => {
-        printTicket(); // Imprimir ticket después de SweetAlert
-      });
-    } else if (status === "pending") {
-      Swal.fire({
-        title: "Pago Pendiente",
-        text: "Tu pago está pendiente de confirmación.",
-        icon: "info",
-        confirmButtonText: "OK",
-      }).then(() => {
-        printTicket(); // Imprimir ticket en estado pendiente
-      });
-    } else if (status === "failure") {
-      Swal.fire({
-        title: "Pago Rechazado",
-        text: "Tu pago no pudo ser procesado.",
-        icon: "error",
-        confirmButtonText: "OK",
-      }).then(() => {
-        printTicket(); // Imprimir ticket en estado fallido
+        handleCloseQR();
+        setTimeout(() => {
+          printTickets();
+        }, 1000);
       });
     }
   };
-  
-  // Función para cerrar el modal del QR y poner en cero los productos
+
   const handleCloseQR = () => {
     setShowQR(false);
-    resetAll(); // Poner en cero todos los productos y resetear la orden
   };
-  
-  
 
   const incrementQuantity = (id) => {
     setLocalProducts(
@@ -175,16 +151,6 @@ const Home = () => {
       localProducts.map((product) =>
         product._id === id ? { ...product, quantity: 0 } : product
       )
-    );
-  };
-
-  // Función para poner en cero todos los productos
-  const resetProducts = () => {
-    setLocalProducts(
-      localProducts.map((product) => ({
-        ...product,
-        quantity: 0,
-      }))
     );
   };
 
@@ -216,12 +182,8 @@ const Home = () => {
     }
   };
 
-  // Función para cerrar el modal del QR y poner en cero los productos
-
-
   return (
     <div className="relative min-h-screen bg-gray-100 flex flex-col items-center py-10 bg-gray-300">
-      {/* Si se muestra el QR, difumina el contenido detrás */}
       <div className="mb-8 w-full max-w-5xl mx-auto px-4 lg:px-0">
         <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-400 py-3 px-6 rounded-lg inline-block">
           Productos
@@ -337,7 +299,7 @@ const Home = () => {
           <div className="relative bg-white p-6 rounded-lg shadow-lg w-11/12 sm:w-4/5 max-w-md h-auto">
             <button
               className="absolute -top-4 -right-4 text-red-500 hover:text-red-700 bg-white rounded-full p-2"
-              onClick={handleCloseQR} // Llamar a handleCloseQR para cerrar el modal y resetear los productos
+              onClick={handleCloseQR}
             >
               <FontAwesomeIcon
                 icon={faTimes}
@@ -355,27 +317,6 @@ const Home = () => {
           </div>
         </div>
       )}
-
-      {/* Div oculto para imprimir el ticket */}
-      <div id="printArea" style={{ display: "none" }}>
-  <div
-    style={{
-      width: "8cm", // Ajusta el ancho a 5 cm
-      height: "8cm", // Ajusta la altura a 5 cm
-      padding: "5px", // Mantén un pequeño padding
-      textAlign: "center",
-      fontSize: "25px", // Aumenta el tamaño de la fuente
-      border: "1px solid #000", // Mantén el borde para referencia visual
-    }}
-  >
-    <h2 style={{ fontSize: "25px", marginBottom: "5px" }}>Vale por:</h2> {/* Título con fuente más grande */}
-    <p style={{ fontSize: "30px" }}>
-    <h2 style={{ fontSize: "25px", marginBottom: "5px" }}>Gracias por tu compra</h2>      
-      {selectedProducts.map((product) => product.name).join(", ")}
-    </p>
-  </div>
-</div>
-
     </div>
   );
 };
