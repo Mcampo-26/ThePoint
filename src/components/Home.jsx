@@ -66,36 +66,36 @@ const Home = () => {
     const selectedProducts = localProducts.filter(
       (product) => product.quantity > 0
     );
-     console.log("Productos seleccionados:", selectedProducts);
-
+    console.log("Productos seleccionados:", selectedProducts);
+  
     setPaymentStatus(status);
     setPaymentId(paymentId);
-
+  
     // Función para imprimir los tickets
     const printTickets = () => {
       let ticketContent = selectedProducts
-        .map(
-          (product) => `
-            <div class="ticket-container">
-              <h2 class="ticket-title">Vale por</h2>
-              <p class="ticket-item">${product.quantity} ${
-            product.quantity === 1 ? product.name : product.name + "s"
-          }</p>
-              <h2 class="ticket-footer">Gracias por tu compra.</h2>
-            </div>`
+        .map((product) =>
+          // Crear un ticket individual por cada unidad seleccionada
+          Array.from({ length: product.quantity }).map(() => `
+              <div class="ticket-container">
+                <h2 class="ticket-title">1x</h2>
+                <p class="ticket-item">${product.name}</p>
+                <h2 class="ticket-footer">Gracias por tu compra.</h2>
+              </div>`
+          ).join("") // Unir los tickets de un mismo producto
         )
-        .join(""); // Unir todos los tickets en uno
-
-      const printWindow = window.open("", "", "width=300,height=300");
+        .join(""); // Unir todos los tickets
+  
+      const printWindow = window.open("", "", "width=450,height=450");
       printWindow.document.write(`
         <html>
           <head>
             <style>
-              body { margin: 0; padding: 0; text-align: center; font-size: 12px; }
-              .ticket-container { width: 100%; text-align: center; font-size: 14px; margin-bottom: 10px; }
-              .ticket-title { font-size: 35px; margin: 5px 0; }
-              .ticket-item { font-size: 25px; margin: 5px 0; }
-              .ticket-footer { font-size: 18px; margin-top: 10px; }
+              body { text-align: center;}
+              .ticket-container { width: 100%; height: 90%; margin-top: -5px; margin-right: 10px; }
+              .ticket-title { font-size: 25px; margin-top: 15px; }
+              .ticket-item { font-size: 60px; margin-top: -35px; margin-bottom: -5px; }
+              .ticket-footer { font-size: 15px; margin-top: 20px; margin-bottom: 0px; }
             </style>
           </head>
           <body onload="window.print();window.close()">
@@ -103,10 +103,10 @@ const Home = () => {
           </body>
         </html>
       `);
-
+  
       printWindow.document.close();
     };
-
+  
     if (status === "approved") {
       Swal.fire({
         title: "¡Pago Exitoso!",
@@ -122,9 +122,15 @@ const Home = () => {
       });
     }
   };
+  
 
   const handleCloseQR = () => {
     setShowQR(false);
+  };
+
+  // Simula un pago exitoso para pruebas
+  const simulatePaymentSuccess = () => {
+    handlePaymentResult("approved", "12345");
   };
 
   const incrementQuantity = (id) => {
@@ -292,6 +298,12 @@ const Home = () => {
               </button>
             </div>
           )}
+          <button
+            className="bg-yellow-500 text-white px-4 py-2 mt-4 rounded-lg shadow-lg"
+            onClick={simulatePaymentSuccess}
+          >
+            Simular Pago Exitoso
+          </button>
         </div>
       </div>
 
