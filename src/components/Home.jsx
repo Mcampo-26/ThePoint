@@ -27,6 +27,10 @@ const Home = () => {
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
+useEffect(() => {
+  // Almacenar productos seleccionados en localStorage
+  localStorage.setItem("selectedProducts", JSON.stringify(localProducts));
+}, [localProducts]);
 
   useEffect(() => {
     if (needsUpdate) {
@@ -63,65 +67,90 @@ const Home = () => {
   }, []);
 
   const handlePaymentResult = (status, paymentId) => {
-    const selectedProducts = localProducts.filter(
-      (product) => product.quantity > 0
-    );
-    console.log("Productos seleccionados:", selectedProducts);
-  
-    setPaymentStatus(status);
-    setPaymentId(paymentId);
-  
-    // Función para imprimir los tickets
-    const printTickets = () => {
-      let ticketContent = selectedProducts
-        .map((product) =>
-          // Crear un ticket individual por cada unidad seleccionada
-          Array.from({ length: product.quantity }).map(() => `
-              <div class="ticket-container">
-                <h2 class="ticket-title">1x</h2>
-                <p class="ticket-item">${product.name}</p>
-                <h2 class="ticket-footer">Gracias por tu compra.</h2>
-              </div>`
-          ).join("") // Unir los tickets de un mismo producto
-        )
-        .join(""); // Unir todos los tickets
-  
-      const printWindow = window.open("", "", "width=450,height=450");
-      printWindow.document.write(`
-        <html>
-          <head>
-            <style>
-              body { text-align: center;}
-              .ticket-container { width: 100%; height: 90%; margin-top: -5px; margin-right: 10px; }
-              .ticket-title { font-size: 25px; margin-top: 15px; }
-              .ticket-item { font-size: 60px; margin-top: -35px; margin-bottom: -5px; }
-              .ticket-footer { font-size: 15px; margin-top: 20px; margin-bottom: 0px; }
-            </style>
-          </head>
-          <body onload="window.print();window.close()">
-            ${ticketContent}
-          </body>
-        </html>
-      `);
-  
-      printWindow.document.close();
-    };
-  
-    if (status === "approved") {
-      Swal.fire({
-        title: "¡Pago Exitoso!",
-        text: "Gracias por tu compra.",
-        icon: "success",
-        showConfirmButton: false,
-        timer: 2000,
-      }).then(() => {
-        handleCloseQR();
-        setTimeout(() => {
-          printTickets();
-        }, 1000);
-      });
-    }
+  // Obtener productos desde localStorage si no están en estado local
+  const storedProducts = JSON.parse(localStorage.getItem("selectedProducts")) || [];
+
+  const selectedProducts = storedProducts.filter(
+    (product) => product.quantity > 0
+  );
+
+  console.log("Productos seleccionados al confirmar pago:", selectedProducts);
+
+  setPaymentStatus(status);
+  setPaymentId(paymentId);
+
+  // Función para imprimir los tickets
+  const printTickets = () => {
+    let ticketContent = selectedProducts
+      .map((product) =>
+        Array.from({ length: product.quantity }).map(() => `
+            <div class="ticket-container">
+              <h2 class="ticket-title">1x</h2>
+              <p class="ticket-item">${product.name}</p>
+              <h2 class="ticket-footer">Gracias por tu compra.</h2>
+            </div>`
+        ).join("") 
+      )
+      .join("");
+
+    const printWindow = window.open("", "", "width=450,height=450");
+    printWindow.document.write(`
+      <html>
+        <head>
+          <style>
+            body { 
+              text-align: center; 
+              margin: 0; 
+              padding: 0;
+              font-size: 12px;
+              height: auto; 
+            }
+            .ticket-container { 
+              width: 90%; 
+              margin: 0 auto;
+              padding: 0;
+              height: auto; 
+              margin-bottom: 10px;
+            }
+            .ticket-title { 
+              font-size: 25px; 
+              margin-top: 15px;
+            }
+            .ticket-item { 
+              font-size: 55px; 
+              margin-top: -35px; 
+              margin-bottom: -5px; 
+            }
+            .ticket-footer { 
+              font-size: 10px; 
+              margin-top: 20px; 
+            }
+          </style>
+        </head>
+        <body onload="window.print();window.close()">
+          ${ticketContent}
+        </body>
+      </html>
+    `);
+
+    printWindow.document.close();
   };
+
+  if (status === "approved") {
+    Swal.fire({
+      title: "¡Pago Exitoso!",
+      text: "Gracias por tu compra.",
+      icon: "success",
+      showConfirmButton: false,
+      timer: 2000,
+    }).then(() => {
+      handleCloseQR();
+      setTimeout(() => {
+        printTickets();
+      }, 1000);
+    });
+  }
+};
   
 
   const handleCloseQR = () => {
