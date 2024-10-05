@@ -93,7 +93,7 @@ const Home = () => {
             <style>
               body { text-align: center;}
               .ticket-container { width: 100%; height: 90%; margin-top: -5px; margin-right: 10px; }
-              .ticket-title { font-size: 25px; margin-top: 55px; }
+              .ticket-title { font-size: 25px; margin-top: 15px; }
               .ticket-item { font-size: 60px; margin-top: -35px; margin-bottom: -5px; }
               .ticket-footer { font-size: 15px; margin-top: 20px; margin-bottom: 0px; }
             </style>
