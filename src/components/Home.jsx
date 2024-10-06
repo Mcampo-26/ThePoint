@@ -113,7 +113,7 @@ useEffect(() => {
             }
             .ticket-title { 
               font-size: 25px; 
-              margin-top: -105px;
+              margin-top: -10px;
               margin-bottom:15px;
             }
             .ticket-item { 
