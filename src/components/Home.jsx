@@ -118,12 +118,12 @@ useEffect(() => {
             }
             .ticket-item { 
               font-size: 60px; 
-              margin-top: -30px !important; 
+              margin-top: -50px !important; 
               
             }
             .ticket-footer { no
               font-size: 20px; 
-              margin-top: -4px; 
+            
             }
           </style>
         </head>
