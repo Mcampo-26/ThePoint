@@ -118,7 +118,7 @@ useEffect(() => {
             }
             .ticket-item { 
               font-size: 60px; 
-              margin-top: -35px:
+              margin-top: 60px:
               
             }
             .ticket-footer { no
