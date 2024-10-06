@@ -109,16 +109,16 @@ useEffect(() => {
               margin: 0 auto;
               padding: 0;
               height: auto; 
-              margin-bottom: 10px;
+              
             }
             .ticket-title { 
               font-size: 25px; 
               margin-top: -10px;
-              margin-bottom:5px;
+              margin-bottom:15px;
             }
             .ticket-item { 
               font-size: 60px; 
-              margin-top: 35px !important; 
+              margin-top: -35px:
               
             }
             .ticket-footer { no
