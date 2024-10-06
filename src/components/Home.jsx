@@ -1,4 +1,4 @@
-mio⅔import React, { useState, useEffect, useRef } from "react";
+demio⅔import React, { useState, useEffect, useRef } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash, faTimes } from "@fortawesome/free-solid-svg-icons";
 import { usePaymentStore } from "../store/usePaymentStore";
@@ -113,7 +113,7 @@ useEffect(() => {
             }
             .ticket-title { 
               font-size: 25px; 
-              margin-top: 15px;
+              margin-top: -10px;
               margin-bottom:5px;
             }
             .ticket-item { 
