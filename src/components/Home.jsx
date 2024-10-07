@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash, faTimes } from "@fortawesome/free-solid-svg-icons";
 import { usePaymentStore } from "../store/usePaymentStore";
@@ -18,8 +18,8 @@ const Home = () => {
   const { createPaymentLink, paymentLink, paymentLoading } = usePaymentStore();
   const { products, fetchProducts, needsUpdate, setNeedsUpdate } =
     useProductStore();
-  const [showQR, setShowQR] = useState(false);
   const [localProducts, setLocalProducts] = useState([]); // Para gestionar cantidades de productos seleccionados
+  const [showQR, setShowQR] = useState(false); // Estado para mostrar/ocultar el QR
   const [paymentStatus, setPaymentStatus] = useState(null); // Estado del pago
   const [paymentId, setPaymentId] = useState(null); // ID del pago
 
@@ -35,6 +35,7 @@ const Home = () => {
     }
   }, [needsUpdate, fetchProducts, setNeedsUpdate]);
 
+  // Inicializa los productos en el estado con cantidad 0
   useEffect(() => {
     const initializedProducts = products.map((product) => ({
       ...product,
@@ -42,11 +43,13 @@ const Home = () => {
     }));
     setLocalProducts(initializedProducts);
   }, [products]);
+
+  // Almacenar productos seleccionados en localStorage
   useEffect(() => {
-    // Almacenar productos seleccionados en localStorage
     localStorage.setItem("selectedProducts", JSON.stringify(localProducts));
   }, [localProducts]);
 
+  // Maneja el evento WebSocket para recibir el pago exitoso
   useEffect(() => {
     socket.on("connect", () => {
       console.log("Conectado al servidor WebSocket");
@@ -66,9 +69,9 @@ const Home = () => {
     };
   }, []);
 
+  // Maneja el resultado del pago
   const handlePaymentResult = async (status, paymentId) => {
-    const storedProducts =
-      JSON.parse(localStorage.getItem("selectedProducts")) || [];
+    const storedProducts = JSON.parse(localStorage.getItem("selectedProducts")) || [];
 
     const selectedProducts = storedProducts.filter(
       (product) => product.quantity > 0
@@ -79,66 +82,6 @@ const Home = () => {
 
     setPaymentStatus(status);
     setPaymentId(paymentId);
-
-    // Función para imprimir los tickets
-    const printTickets = () => {
-      let ticketContent = selectedProducts
-        .map((product) =>
-          Array.from({ length: product.quantity })
-            .map(
-              () => `
-            <div class="ticket-container">
-              <h2 class="ticket-title">1x</h2>
-              <p class="ticket-item">${product.name}</p>
-              <h2 class="ticket-footer">Gracias por tu compra.</h2>
-            </div>`
-            )
-            .join("")
-        )
-        .join("");
-
-      const printWindow = window.open("", "", "width=500,height=500");
-      printWindow.document.write(`
-    <html>
-  <head>
-    <style>
-      body { 
-        text-align: center; 
-        margin: 0; 
-        padding: 0;
-        height: auto; 
-      }
-      .ticket-container { 
-        width: 100%; 
-        height: auto; 
-       padding-right: -40px
-    
-
-      
-      }
-      .ticket-title { 
-        font-size: 20px; 
-        margin-top: 1px;
-      }
-      .ticket-item { 
-        font-size: 55px; 
-        margin-top: -15px;
-      }
-      .ticket-footer { 
-        font-size: 10px; 
-        margin-top: -20px;
-      }
-    </style>
-  </head>
-  <body onload="window.print();window.close()">
-    ${ticketContent}
-  </body>
-</html>
-
-    `);
-
-      printWindow.document.close();
-    };
 
     if (status === "approved") {
       console.log("Pago aprobado, mostrando notificación...");
@@ -153,23 +96,71 @@ const Home = () => {
       console.log("Notificación cerrada, iniciando impresión de tickets...");
       handleCloseQR();
       setTimeout(() => {
-        printTickets();
-      }); // Da un breve retardo antes de ejecutar la impresión
+        printTickets(selectedProducts); // Envía los productos seleccionados a la función de impresión
+      }, 500); // Da un breve retardo antes de ejecutar la impresión
     }
   };
 
+  // Función para imprimir los tickets
+  const printTickets = (selectedProducts) => {
+    if (selectedProducts.length === 0) {
+      console.log("No hay productos seleccionados para imprimir.");
+      return;
+    }
+
+    let ticketContent = selectedProducts
+      .map((product) =>
+        Array.from({ length: product.quantity })
+          .map(
+            () => `
+              <div class="ticket-container">
+                <h2 class="ticket-title">1x</h2>
+                <p class="ticket-item">${product.name}</p>
+                <h2 class="ticket-footer">Precio: ${product.price}</h2>
+              </div>`
+          )
+          .join("")
+      )
+      .join("");
+
+    const printWindow = window.open("", "", "width=500,height=500");
+    if (!printWindow) {
+      alert("Error: El navegador bloqueó la ventana de impresión. Permita las ventanas emergentes.");
+      return;
+    }
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <style>
+            body { text-align: center; margin: 0; padding: 0; height: auto; }
+            .ticket-container { width: 100%; height: auto; }
+            .ticket-title { font-size: 20px; margin-top: 1px; }
+            .ticket-item { font-size: 55px; margin-top: -15px; }
+            .ticket-footer { font-size: 10px; margin-top: -20px; }
+          </style>
+        </head>
+        <body onload="window.print();window.close()">
+          ${ticketContent}
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+
+  // Función para cerrar el QR
   const handleCloseQR = () => {
     setShowQR(false);
   };
 
   // Simula un pago exitoso para pruebas
   const simulatePaymentSuccess = () => {
-    // Simula la aprobación del pago y genera el ticket
     const fakePaymentId = "12345"; // ID de pago simulado
     const fakeStatus = "approved"; // Estado simulado
     handlePaymentResult(fakeStatus, fakePaymentId); // Llama a la función que maneja el resultado del pago
   };
 
+  // Incrementa la cantidad de productos
   const incrementQuantity = (id) => {
     setLocalProducts(
       localProducts.map((product) =>
@@ -180,6 +171,7 @@ const Home = () => {
     );
   };
 
+  // Decrementa la cantidad de productos
   const decrementQuantity = (id) => {
     setLocalProducts(
       localProducts.map((product) =>
@@ -190,6 +182,7 @@ const Home = () => {
     );
   };
 
+  // Elimina un producto del carrito
   const removeProduct = (id) => {
     setLocalProducts(
       localProducts.map((product) =>
