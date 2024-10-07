@@ -46,6 +46,130 @@ useEffect(() => {
     }));
     setLocalProducts(initializedProducts);
   }, [products]);
+  useEffect(() => {
+    // Almacenar productos seleccionados en localStorage
+    localStorage.setItem("selectedProducts", JSON.stringify(localProducts));
+  }, [localProducts]);
+  
+  useEffect(() => {
+    socket.on("connect", () => {
+      console.log("Conectado al servidor WebSocket");
+    });
+
+    socket.on("paymentSuccess", ({ status, paymentId }) => {
+      handlePaymentResult(status, paymentId);
+    });
+
+    socket.on("disconnect", () => {
+      console.log("Desconectado del servidor WebSocket");
+    });
+
+    return () => {
+      socket.off("paymentSuccess");
+      socket.disconnect();
+    };
+  }, []);
+
+  const handlePaymentResult = async (status, paymentId) => {
+  const storedProducts = JSON.parse(localStorage.getItem("selectedProducts")) || [];
+
+  const selectedProducts = storedProducts.filter(
+    (product) => product.quantity > 0
+  );
+
+  console.log("Productos seleccionados al confirmar pago:", selectedProducts);
+  console.log("Estado del pago recibido:", status, "ID de pago:", paymentId);
+
+  setPaymentStatus(status);
+  setPaymentId(paymentId);
+
+  // Función para imprimir los tickets
+  const printTickets = () => {
+    let ticketContent = selectedProducts
+      .map((product) =>
+        Array.from({ length: product.quantity }).map(() => `
+            <div class="ticket-container">
+              <h2 class="ticket-title">1x</h2>
+              <p class="ticket-item">${product.name}</p>
+              <h2 class="ticket-footer">Gracias por tu compra.</h2>
+            </div>`
+        ).join("") 
+      )
+      .join("");
+
+    const printWindow = window.open("", "", "width=450,height=450");
+    printWindow.document.write(`
+      <html>
+        <head>
+          <style>
+            body { 
+              text-align: center; 
+              margin: 0; 
+              padding: 0;
+              height: auto; 
+              position:relative
+               margin-right: 50px
+            }
+            .ticket-container { 
+              width: 100%; 
+             height: auto; 
+             margin-right: 20px
+            }
+            .ticket-title { 
+              font-size: 20px; 
+              margin-top: 1px;
+              
+            }
+            .ticket-item { 
+              font-size: 55px; 
+              margin-top: -15px;
+            }
+            .ticket-footer { 
+              font-size: 10px; 
+              margin-top: -20px;
+            }
+          </style>
+        </head>
+        <body onload="window.print();window.close()">
+          ${ticketContent}
+        </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+  };
+
+  if (status === "approved") {
+    console.log("Pago aprobado, mostrando notificación...");
+    await Swal.fire({
+      title: "¡Pago Exitoso!",
+      text: "Gracias por tu compra.",
+      icon: "success",
+      showConfirmButton: false,
+      timer: 2000,
+    });
+
+    console.log("Notificación cerrada, iniciando impresión de tickets...");
+    handleCloseQR();
+    setTimeout(() => {
+      printTickets();
+    }, ); // Da un breve retardo antes de ejecutar la impresión
+  }
+};
+
+  
+
+  const handleCloseQR = () => {
+    setShowQR(false);
+  };
+
+  // Simula un pago exitoso para pruebas
+  const simulatePaymentSuccess = () => {
+    // Simula la aprobación del pago y genera el ticket
+    const fakePaymentId = "12345"; // ID de pago simulado
+    const fakeStatus = "approved"; // Estado simulado
+    handlePaymentResult(fakeStatus, fakePaymentId); // Llama a la función que maneja el resultado del pago
+  };
 
   useEffect(() => {
     socket.on("connect", () => {

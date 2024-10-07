@@ -7,9 +7,8 @@ export const usePaymentStore = create((set) => ({
   paymentLoading: false,
   paymentError: null,
   paymentLink: null,
-
-  // Estado de productos
-  products: [
+  
+  products: JSON.parse(localStorage.getItem('selectedProducts')) || [
     { id: 1, name: 'Cerveza', price: 200, quantity: 0 },
     { id: 2, name: 'Fernet', price: 300, quantity: 0 },
     { id: 3, name: 'Gin', price: 400, quantity: 0 },
