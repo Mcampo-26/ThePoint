@@ -66,8 +66,7 @@ useEffect(() => {
     };
   }, []);
 
-  const handlePaymentResult = (status, paymentId) => {
-  // Obtener productos desde localStorage si no están en estado local
+ const handlePaymentResult = async (status, paymentId) => {
   const storedProducts = JSON.parse(localStorage.getItem("selectedProducts")) || [];
 
   const selectedProducts = storedProducts.filter(
@@ -75,6 +74,7 @@ useEffect(() => {
   );
 
   console.log("Productos seleccionados al confirmar pago:", selectedProducts);
+  console.log("Estado del pago recibido:", status, "ID de pago:", paymentId);
 
   setPaymentStatus(status);
   setPaymentId(paymentId);
@@ -118,14 +118,12 @@ useEffect(() => {
               margin-bottom:5px;
             }
             .ticket-item { 
-            positions:absolute
               font-size: 60px; 
               margin-top: 20px:
               
             }
-            .ticket-footer { no
+            .ticket-footer { 
               font-size: 20px; 
-            
             }
           </style>
         </head>
@@ -139,20 +137,23 @@ useEffect(() => {
   };
 
   if (status === "approved") {
-    Swal.fire({
+    console.log("Pago aprobado, mostrando notificación...");
+    await Swal.fire({
       title: "¡Pago Exitoso!",
       text: "Gracias por tu compra.",
       icon: "success",
       showConfirmButton: false,
       timer: 2000,
-    }).then(() => {
-      handleCloseQR();
-      setTimeout(() => {
-        printTickets();
-      }, 1000);
     });
+
+    console.log("Notificación cerrada, iniciando impresión de tickets...");
+    handleCloseQR();
+    setTimeout(() => {
+      printTickets();
+    }, 1000); // Da un breve retardo antes de ejecutar la impresión
   }
 };
+
   
 
   const handleCloseQR = () => {
