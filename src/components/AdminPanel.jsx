@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { useProductStore } from '../store/useProductStore'; // Importar el store de Zustand
-import Swal from 'sweetalert2'; // Importar SweetAlert2
+import { useProductStore } from '../store/useProductStore'; 
+import Swal from 'sweetalert2';
 
 const AdminPanel = () => {
   const { addProduct, fetchProducts, products, deleteProduct, updateProduct, setNeedsUpdate } = useProductStore();
   const [form, setForm] = useState({ name: '', price: '', imageUrl: '' });
   const [isEditing, setIsEditing] = useState(false);
   const [editProductId, setEditProductId] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false); // Estado de autenticación
+  const [credentials, setCredentials] = useState({ username: '', password: '' }); // Estado de credenciales
 
-  // Cargar los productos al montar el componente
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
@@ -27,7 +28,7 @@ const AdminPanel = () => {
     try {
       if (isEditing) {
         await updateProduct(editProductId, form);
-        setNeedsUpdate(true); // Marcar que hay una actualización pendiente
+        setNeedsUpdate(true);
         Swal.fire('Actualizado', 'El producto ha sido actualizado correctamente.', 'success');
       } else {
         await addProduct({
@@ -35,11 +36,10 @@ const AdminPanel = () => {
           price: form.price,
           imageUrl: form.imageUrl,
         });
-        setNeedsUpdate(true); // Marcar que hay una actualización pendiente
+        setNeedsUpdate(true);
         Swal.fire('Agregado', 'El producto ha sido agregado correctamente.', 'success');
       }
 
-      // Restablecer el formulario
       setForm({ name: '', price: '', imageUrl: '' });
       setIsEditing(false);
       setEditProductId(null);
@@ -55,7 +55,7 @@ const AdminPanel = () => {
     setForm({
       name: product.name || '',
       price: product.price || '',
-      imageUrl: product.imageUrl || '', // Asegúrate de usar el campo correcto para la imagen
+      imageUrl: product.imageUrl || '',
     });
   };
 
@@ -73,11 +73,55 @@ const AdminPanel = () => {
       if (result.isConfirmed) {
         deleteProduct(id).then(() => {
           Swal.fire('Eliminado', 'El producto ha sido eliminado.', 'success');
-          setNeedsUpdate(true); // Notificar que los productos se actualizaron
+          setNeedsUpdate(true);
         });
       }
     });
   };
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+    const { username, password } = credentials;
+    if (username === 'admin' && password === 'tucumatic25') {
+      setIsAuthenticated(true);
+    } else {
+      Swal.fire('Error', 'Usuario o contraseña incorrectos', 'error');
+    }
+  };
+
+  const handleCredentialsChange = (e) => {
+    const { name, value } = e.target;
+    setCredentials({ ...credentials, [name]: value });
+  };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="p-8">
+        <h2 className="text-2xl mb-4">Iniciar sesión</h2>
+        <form onSubmit={handleLogin} className="space-y-4">
+          <input
+            type="text"
+            name="username"
+            value={credentials.username}
+            onChange={handleCredentialsChange}
+            placeholder="Usuario"
+            className="border p-2 w-full"
+          />
+          <input
+            type="password"
+            name="password"
+            value={credentials.password}
+            onChange={handleCredentialsChange}
+            placeholder="Contraseña"
+            className="border p-2 w-full"
+          />
+          <button type="submit" className="bg-blue-500 text-white px-4 py-2">
+            Iniciar sesión
+          </button>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <div className="p-8">
@@ -118,7 +162,6 @@ const AdminPanel = () => {
         {products.map((product) => (
           <li key={product._id} className="flex justify-between items-center p-4 border-b">
             <div className="flex items-center space-x-4">
-              {/* Mostrar una miniatura de la imagen del producto */}
               <img src={product.image} alt={product.name} className="w-16 h-16 object-cover" />
               <div>
                 <h3>{product.name}</h3>
