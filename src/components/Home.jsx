@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash, faTimes } from "@fortawesome/free-solid-svg-icons";
 import { usePaymentStore } from "../store/usePaymentStore";
+import { useModoStore } from "../store/useModoStore";// Asegúrate deimportar tu store de MODO
 import { useProductStore } from "../store/useProductStore";
 import ReactQRCode from "react-qr-code";
 import Swal from "sweetalert2";
@@ -18,10 +19,14 @@ const Home = () => {
   const { createPaymentLink, paymentLink, paymentLoading } = usePaymentStore();
   const { products, fetchProducts, needsUpdate, setNeedsUpdate } =
     useProductStore();
+  const [modoQR, setModoQR] = useState(null); // Estado para almacenar el QR de MODO
   const [localProducts, setLocalProducts] = useState([]); // Para gestionar cantidades de productos seleccionados
   const [showQR, setShowQR] = useState(false); // Estado para mostrar/ocultar el QR
   const [paymentStatus, setPaymentStatus] = useState(null); // Estado del pago
   const [paymentId, setPaymentId] = useState(null); // ID del pago
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null); // Estado para seleccionar el método de pago
+  const { createModoPaymentLink } = useModoStore(); // Ensure this is imported
+
 
   // Obtener productos al cargar el componente
   useEffect(() => {
@@ -69,21 +74,36 @@ const Home = () => {
     };
   }, []);
 
+
+  //MODO
+  const handleModoPayment = async () => {
+    try {
+      const response = await createModoPaymentLink(totalAmount); // Calls MODO payment link
+      const { qr_url } = response; // Extract the QR from the backend response
+      handlePaymentResult("approved", "modoPaymentId", qr_url); // Pass the QR to handlePaymentResult
+    } catch (error) {
+      console.error("Error creating MODO payment:", error); // Log the error
+    }
+  };
+  
+  ////
+
   // Maneja el resultado del pago
   const handlePaymentResult = async (status, paymentId) => {
-    const storedProducts = JSON.parse(localStorage.getItem("selectedProducts")) || [];
-
+    const storedProducts =
+      JSON.parse(localStorage.getItem("selectedProducts")) || [];
+  
     const selectedProducts = storedProducts.filter(
       (product) => product.quantity > 0
     );
-
+  
     console.log("Productos seleccionados al confirmar pago:", selectedProducts);
     console.log("Estado del pago recibido:", status, "ID de pago:", paymentId);
-
+  
     setPaymentStatus(status);
     setPaymentId(paymentId);
-
-   if (status === "approved") {
+  
+    if (status === "approved") {
       console.log("Pago aprobado, mostrando notificación...");
       await Swal.fire({
         title: "¡Pago Exitoso!",
@@ -101,28 +121,20 @@ const Home = () => {
       console.log("Pago rechazado, mostrando notificación...");
       await Swal.fire({
         title: "Pago Rechazado",
-        text: "El pago fue rechazado,intenta nuevamente...",
+        text: "Lamentablemente, el pago fue rechazado.",
         icon: "error",
         showConfirmButton: false,
         timer: 2000,
       });
     }
-  
   };
+  
+
   // Función para imprimir los tickets
   const printTickets = (selectedProducts) => {
     if (selectedProducts.length === 0) {
       console.log("No hay productos seleccionados para imprimir.");
       return;
-    } } else if (status === "rejected") {
-      console.log("Pago rechazado, mostrando notificación...");
-      await Swal.fire({
-        title: "Pago Rechazado",
-        text: "El pago fue rechazado, intenta nuevamente...",
-        icon: "error",
-        showConfirmButton: false,
-        timer: 2000,
-      });
     }
 
     let ticketContent = selectedProducts
@@ -133,7 +145,7 @@ const Home = () => {
               <div class="ticket-container">
                 <h2 class="ticket-title">1x</h2>
                 <p class="ticket-item">${product.name}</p>
-                <h2 class="ticket-footer">Gracias por tu compra </h2>
+                <h2 class="ticket-footer">Precio: ${product.price}</h2>
               </div>`
           )
           .join("")
@@ -142,7 +154,9 @@ const Home = () => {
 
     const printWindow = window.open("", "", "width=500,height=500");
     if (!printWindow) {
-      alert("Error: El navegador bloqueó la ventana de impresión. Permita las ventanas emergentes.");
+      alert(
+        "Error: El navegador bloqueó la ventana de impresión. Permita las ventanas emergentes."
+      );
       return;
     }
 
@@ -168,6 +182,7 @@ const Home = () => {
   // Función para cerrar el QR
   const handleCloseQR = () => {
     setShowQR(false);
+    setSelectedPaymentMethod(null); // Resetea el método de pago al cerrar el modal
   };
 
   // Simula un pago exitoso para pruebas
@@ -236,25 +251,28 @@ const Home = () => {
     }
   };
 
+
+  
+
   return (
-    <div className="relative min-h-screen bg-gray-100 flex flex-col items-center py-10 bg-gray-300">
-      <div className="flex justify-end">
+    <div className="relative min-h-screen bg-gray-100 flex flex-col items-center py-8 bg-gray-300">
+     <div className="flex justify-end">
   <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-400 rounded-lg mb-0">
     Productos
   </h1>
 </div>
-      </div>
+
 
       <div
-        className={`flex flex-col lg:flex-row w-full ${
+        className={`flex flex-col lg:flex-row w-full -mt-10 ${
           showQR ? "blur-md" : ""
         }`}
       >
-        <div className="flex-1 grid grid-cols-1 gap-8 px-4 md:px-8 mt-20">
+        <div className="flex-1 grid grid-cols-1 gap-6 px-4 md:px-8 mt-20">
           {localProducts.map((product) => (
             <div
               key={product._id}
-              className="bg-white shadow-md rounded-lg p-4 flex items-center justify-between transform transition-transform duration-300 hover:scale-105 hover:shadow-lg"
+              className="bg-white shadow-md rounded-lg p-4 flex items-center justify-between transform transition-transform duration-500 hover:scale-105 hover:shadow-lg"
             >
               <div className="flex items-center">
                 <img
@@ -349,7 +367,7 @@ const Home = () => {
           <button
             className="bg-yellow-500 text-white px-4 py-2 mt-4 rounded-lg shadow-lg"
             onClick={simulatePaymentSuccess}
-              hidden
+            hidden
           >
             Simular Pago Exitoso
           </button>
@@ -358,7 +376,7 @@ const Home = () => {
 
       {showQR && paymentLink && (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50">
-          <div className="relative bg-white p-6 rounded-lg shadow-lg w-11/12 sm:w-4/5 max-w-md h-auto">
+          <div className="relative bg-white p-8 rounded-lg shadow-lg w-11/12 sm:w-4/5 max-w-lg h-auto">
             <button
               className="absolute -top-4 -right-4 text-red-500 hover:text-red-700 bg-white rounded-full p-2"
               onClick={handleCloseQR}
@@ -369,12 +387,48 @@ const Home = () => {
                 className="text-red-500 cursor-pointer transition-transform duration-200 hover:rotate-90"
               />
             </button>
-            <div className="flex justify-center items-center w-full">
-              <ReactQRCode
-                value={paymentLink}
-                size={450}
-                className="max-w-full h-auto"
-              />
+
+            {/* Coloca los botones aquí */}
+            <div className="flex justify-center space-x-4 mb-6">
+              <button
+                className={`${
+                  selectedPaymentMethod === "mercadoPago"
+                    ? "bg-blue-500"
+                    : "bg-gray-300"
+                } text-white px-4 py-2 rounded-lg`}
+                onClick={() => setSelectedPaymentMethod("mercadoPago")}
+              >
+                Mercado Pago
+              </button>
+              <button
+                className={`${
+                  selectedPaymentMethod === "modo"
+                    ? "bg-blue-500"
+                    : "bg-gray-300"
+                } text-white px-4 py-2 rounded-lg`}
+                onClick={() => handleModoPayment("modo")}
+              >
+                MODO
+              </button>
+            </div>
+
+            {/* QR Code centrado abajo */}
+            <div className="flex justify-center items-center">
+              {selectedPaymentMethod === "mercadoPago" && (
+                <ReactQRCode
+                  value={paymentLink}
+                  size={300} // Ajusta el tamaño del QR
+                  className="max-w-full h-auto"
+                />
+              )}
+
+              {selectedPaymentMethod === "modo" && modoQR && (
+                <ReactQRCode
+                  value={modoQR} // Utiliza el valor dinámico del QR de MODO
+                  size={300}
+                  className="max-w-full h-auto"
+                />
+              )}
             </div>
           </div>
         </div>
