@@ -25,7 +25,7 @@ const Home = () => {
   const [paymentStatus, setPaymentStatus] = useState(null); // Estado del pago
   const [paymentId, setPaymentId] = useState(null); // ID del pago
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null); // Estado para seleccionar el método de pago
-  const { createModoPaymentLink } = useModoStore(); // Ensure this is imported
+  //const { createModoPaymentLink } = useModoStore(); // Ensure this is imported
 
 
   // Obtener productos al cargar el componente
@@ -400,16 +400,16 @@ const Home = () => {
               >
                 Mercado Pago
               </button>
-              <button
-                className={`${
-                  selectedPaymentMethod === "modo"
-                    ? "bg-blue-500"
-                    : "bg-gray-300"
-                } text-white px-4 py-2 rounded-lg`}
-                onClick={() => handleModoPayment("modo")}
-              >
-                MODO
-              </button>
+             {/* <button
+  className={`${
+    selectedPaymentMethod === "modo"
+      ? "bg-blue-500"
+      : "bg-gray-300"
+  } text-white px-4 py-2 rounded-lg`}
+  onClick={() => handleModoPayment("modo")}
+>
+  MODO
+</button> */}
             </div>
 
             {/* QR Code centrado abajo */}
@@ -421,14 +421,14 @@ const Home = () => {
                   className="max-w-full h-auto"
                 />
               )}
-
+ {/* QR Code centrado abajo 
               {selectedPaymentMethod === "modo" && modoQR && (
                 <ReactQRCode
                   value={modoQR} // Utiliza el valor dinámico del QR de MODO
                   size={300}
                   className="max-w-full h-auto"
                 />
-              )}
+              )}*/}
             </div>
           </div>
         </div>
