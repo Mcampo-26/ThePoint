@@ -116,7 +116,7 @@ const Home = () => {
               <div class="ticket-container">
                 <h2 class="ticket-title">1x</h2>
                 <p class="ticket-item">${product.name}</p>
-                <h2 class="ticket-footer">Precio: ${product.price}</h2>
+                <h2 class="ticket-footer">Gracias por tu compra </h2>
               </div>`
           )
           .join("")
