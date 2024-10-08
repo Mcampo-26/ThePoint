@@ -96,7 +96,8 @@ const Home = () => {
       console.log("Notificación cerrada, iniciando impresión de tickets...");
       handleCloseQR();
       setTimeout(() => {
-        printTickets(selectedProducts); // Envía los productos seleccionados a la función de impresión
+        printTickets(selectedProducts);
+            window.location.reload(); // Envía los productos seleccionados a la función de impresión
       }, 500); // Da un breve retardo antes de ejecutar la impresión
     }
   };
@@ -331,6 +332,7 @@ const Home = () => {
           <button
             className="bg-yellow-500 text-white px-4 py-2 mt-4 rounded-lg shadow-lg"
             onClick={simulatePaymentSuccess}
+              hidden
           >
             Simular Pago Exitoso
           </button>
