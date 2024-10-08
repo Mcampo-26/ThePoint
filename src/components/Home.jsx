@@ -115,7 +115,7 @@ const Home = () => {
               <div class="ticket-container">
                 <h2 class="ticket-title">1x</h2>
                 <p class="ticket-item">${product.name}</p>
-                <h2 class="ticket-footer">Precio: ${product.price}</h2>
+                <h2 class="ticket-footer">gracias por su compra...</h2>
               </div>`
           )
           .join("")
@@ -327,12 +327,13 @@ const Home = () => {
               </button>
             </div>
           )}
+           {/* 
           <button
             className="bg-yellow-500 text-white px-4 py-2 mt-4 rounded-lg shadow-lg"
             onClick={simulatePaymentSuccess}
           >
             Simular Pago Exitoso
-          </button>
+          </button>*/}
         </div>
       </div>
 
