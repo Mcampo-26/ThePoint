@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash, faTimes } from "@fortawesome/free-solid-svg-icons";
 import { usePaymentStore } from "../store/usePaymentStore";
-import { useModoStore } from "../store/useModoStore";// Asegúrate deimportar tu store de MODO
+//import { useModoStore } from "../store/useModoStore";// Asegúrate deimportar tu store de MODO
 import { useProductStore } from "../store/useProductStore";
 import ReactQRCode from "react-qr-code";
 import Swal from "sweetalert2";
@@ -19,7 +19,7 @@ const Home = () => {
   const { createPaymentLink, paymentLink, paymentLoading } = usePaymentStore();
   const { products, fetchProducts, needsUpdate, setNeedsUpdate } =
     useProductStore();
-  const [modoQR, setModoQR] = useState(null); // Estado para almacenar el QR de MODO
+  //const [modoQR, setModoQR] = useState(null); // Estado para almacenar el QR de MODO
   const [localProducts, setLocalProducts] = useState([]); // Para gestionar cantidades de productos seleccionados
   const [showQR, setShowQR] = useState(false); // Estado para mostrar/ocultar el QR
   const [paymentStatus, setPaymentStatus] = useState(null); // Estado del pago
@@ -76,15 +76,15 @@ const Home = () => {
 
 
   //MODO
-  const handleModoPayment = async () => {
-    try {
-      const response = await createModoPaymentLink(totalAmount); // Calls MODO payment link
-      const { qr_url } = response; // Extract the QR from the backend response
-      handlePaymentResult("approved", "modoPaymentId", qr_url); // Pass the QR to handlePaymentResult
-    } catch (error) {
-      console.error("Error creating MODO payment:", error); // Log the error
-    }
-  };
+  //const handleModoPayment = async () => {
+    //try {
+      //const response = await createModoPaymentLink(totalAmount); // Calls MODO payment link
+     // const { qr_url } = response; // Extract the QR from the backend response
+     // handlePaymentResult("approved", "modoPaymentId", qr_url); // Pass the QR to handlePaymentResult
+    //} catch (error) {
+   //   console.error("Error creating MODO payment:", error); // Log the error
+   // }
+  //};
   
   ////
 
