@@ -83,7 +83,7 @@ const Home = () => {
     setPaymentStatus(status);
     setPaymentId(paymentId);
 
-    if (status === "approved") {
+   if (status === "approved") {
       console.log("Pago aprobado, mostrando notificación...");
       await Swal.fire({
         title: "¡Pago Exitoso!",
@@ -92,21 +92,37 @@ const Home = () => {
         showConfirmButton: false,
         timer: 2000,
       });
-
-      console.log("Notificación cerrada, iniciando impresión de tickets...");
+  
       handleCloseQR();
       setTimeout(() => {
         printTickets(selectedProducts);
-            window.location.reload(); // Envía los productos seleccionados a la función de impresión
-      }, 500); // Da un breve retardo antes de ejecutar la impresión
+      }, 100);
+    } else if (status === "rejected") {
+      console.log("Pago rechazado, mostrando notificación...");
+      await Swal.fire({
+        title: "Pago Rechazado",
+        text: "El pago fue rechazado,intenta nuevamente...",
+        icon: "error",
+        showConfirmButton: false,
+        timer: 2000,
+      });
     }
+  
   };
-
   // Función para imprimir los tickets
   const printTickets = (selectedProducts) => {
     if (selectedProducts.length === 0) {
       console.log("No hay productos seleccionados para imprimir.");
       return;
+    } } else if (status === "rejected") {
+      console.log("Pago rechazado, mostrando notificación...");
+      await Swal.fire({
+        title: "Pago Rechazado",
+        text: "El pago fue rechazado, intenta nuevamente...",
+        icon: "error",
+        showConfirmButton: false,
+        timer: 2000,
+      });
     }
 
     let ticketContent = selectedProducts
@@ -222,10 +238,11 @@ const Home = () => {
 
   return (
     <div className="relative min-h-screen bg-gray-100 flex flex-col items-center py-10 bg-gray-300">
-      <div className="mb-8 w-full max-w-5xl mx-auto px-4 lg:px-0">
-        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-400 py-3 px-6 rounded-lg inline-block">
-          Productos
-        </h1>
+      <div className="flex justify-end">
+  <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-400 rounded-lg mb-0">
+    Productos
+  </h1>
+</div>
       </div>
 
       <div
