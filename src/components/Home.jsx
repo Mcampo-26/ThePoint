@@ -86,6 +86,7 @@ const Home = () => {
       handleCloseQR();
       setTimeout(() => {
         printTickets(selectedProducts);
+        window.location.reload();
       }, 100);
     } else if (status === "rejected") {
       await Swal.fire({
