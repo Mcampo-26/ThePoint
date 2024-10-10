@@ -7,6 +7,7 @@ export const usePaymentStore = create((set) => ({
   paymentLoading: false,
   paymentError: null,
   paymentLink: null,
+  qrCodeURL: null, 
   
   products: JSON.parse(localStorage.getItem('selectedProducts')) || [
     { id: 1, name: 'Cerveza', price: 200, quantity: 0 },
@@ -16,36 +17,38 @@ export const usePaymentStore = create((set) => ({
   ],
 
   // Acción para crear enlace de pago
-  createPaymentLink: async (productName, price, qrId) => { // qrId agregado como parámetro
+  createPaymentLink: async (productName, price, selectedProducts) => {
     set({ paymentLoading: true, paymentError: null });
     try {
-      console.log('Datos a enviar al backend:', { title: productName, price: parseFloat(price), qrId });
+      console.log('Datos a enviar al backend:', { title: productName, price: parseFloat(price), products: selectedProducts });
   
-      const response = await axios.post(`${URL}/Pagos/create_payment_link`, {
+      // Enviar datos al backend para generar el QR dinámico
+      const response = await axios.post(`${URL}/Pagos/create-dynamic-qr`, {
         title: productName,
         price: parseFloat(price),
-        qrId // Enviar qrId al backend para validación
+        products: selectedProducts // Enviar los productos seleccionados
       });
   
-      console.log('Respuesta del backend (Mercado Pago):', response.data); // Verifica lo que viene del backend
+      console.log('Respuesta del backend (QR dinámico):', response.data); // Verifica lo que viene del backend
   
-      const paymentLink = response.data.paymentLink;
-      if (paymentLink) {
-        set({ paymentLoading: false, paymentLink });
-        console.log('Enlace de pago generado:', paymentLink); // Verifica el enlace generado
-        return paymentLink;
+      const qrCodeURL = response.data.qrCodeURL;
+      if (qrCodeURL) {
+        set({ paymentLoading: false, qrCodeURL });
+        console.log('QR dinámico generado:', qrCodeURL); // Verifica el QR generado
+        return qrCodeURL;
       } else {
-        throw new Error('No se recibió un enlace de pago en la respuesta');
+        throw new Error('No se recibió una URL de código QR en la respuesta');
       }
     } catch (error) {
-      console.error('Error al crear el enlace de pago:', error); // Log de error si algo falla
+      console.error('Error al crear el QR dinámico:', error); // Log de error si algo falla
       set({
-        paymentError: 'Hubo un problema al generar tu enlace de pago.',
+        paymentError: 'Hubo un problema al generar tu QR.',
         paymentLoading: false,
       });
       throw error;
     }
   },
+  
   
   // Guardar detalles de pago
   savePaymentDetails: async (paymentDetails) => {
