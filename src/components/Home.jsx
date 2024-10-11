@@ -16,7 +16,7 @@ const socket = io("https://thepointback-03939a97aeeb.herokuapp.com", {
 });
 
 const Home = () => {
-  const { createPaymentLink, paymentLink, paymentLoading } = usePaymentStore();
+  const { createPaymentLink, paymentLink, paymentLoading, } = usePaymentStore();
   const { products, fetchProducts, needsUpdate, setNeedsUpdate } = useProductStore();
   //const [modoQR, setModoQR] = useState(null); // Estado para almacenar el QR de MODO
   const [localProducts, setLocalProducts] = useState([]); // Para gestionar cantidades de productos seleccionados
@@ -151,7 +151,7 @@ const Home = () => {
     const socketId = socket.id; // Obtener el ID del socket conectado
   
     try {
-      await createDynamicQR(productName, totalAmount, selectedProducts, socketId); // Pasar el ID del socket al backend
+      await createPaymentLink(productName, totalAmount, selectedProducts, socketId); // Pasar el ID del socket al backend
       setShowQR(true);
     } catch (error) {
       console.error("Error al generar el QR dinámico:", error);
