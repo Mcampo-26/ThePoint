@@ -1,13 +1,12 @@
 import { create } from 'zustand';
 import axios from 'axios';
-import { URL } from '../utilities/config.js';
+import { URL} from '../utilities/config.js';
 
 export const usePaymentStore = create((set) => ({
   // Estado de pagos
   paymentLoading: false,
   paymentError: null,
   paymentLink: null,
-  qrCodeURL: null, 
   
   products: JSON.parse(localStorage.getItem('selectedProducts')) || [
     { id: 1, name: 'Cerveza', price: 200, quantity: 0 },
@@ -17,40 +16,55 @@ export const usePaymentStore = create((set) => ({
   ],
 
   // Acción para crear enlace de pago
-  createPaymentLink: async (productName, price, selectedProducts, socketId) => {
+  createPaymentLink: async (productName, price) => {
     set({ paymentLoading: true, paymentError: null });
     try {
-      console.log('Datos a enviar al backend:', { title: productName, price: parseFloat(price), products: selectedProducts });
-  
-      // Enviar datos al backend para generar el QR dinámico
-      const response = await axios.post(`${URL}/Pagos/create-dynamic-qr`, {
-        title: productName,
-        price: parseFloat(price),
-        products: selectedProducts,
-        socketId  // Enviar los productos seleccionados
+      console.log('Datos a enviar al backend:', { title: productName, price: parseFloat(price) });
+
+      const response = await axios.post(`${URL}/Pagos/create_payment_link`, {
+        title: productName, // Enviar el título del producto
+        price: parseFloat(price), // Asegurarse de que el precio sea un número
       });
-  
-      console.log('Respuesta del backend (QR dinámico):', response.data); // Verifica lo que viene del backend
-  
-      const qrCodeURL = response.data.qrCodeURL;
-      if (qrCodeURL) {
-        set({ paymentLoading: false, qrCodeURL });
-        console.log('QR dinámico generado:', qrCodeURL); // Verifica el QR generado
-        return qrCodeURL;
+
+      console.log('Respuesta de Mercado Pago:', response.data);
+
+      const paymentLink = response.data.paymentLink;
+      if (paymentLink) {
+        set({ paymentLoading: false, paymentLink });
+        return paymentLink;
       } else {
-        throw new Error('No se recibió una URL de código QR en la respuesta');
+        throw new Error('No se recibió un enlace de pago en la respuesta');
       }
     } catch (error) {
-      console.error('Error al crear el QR dinámico:', error); // Log de error si algo falla
+      console.error('Error al crear el enlace de pago:', error);
       set({
-        paymentError: 'Hubo un problema al generar tu QR.',
+        paymentError: 'Hubo un problema al generar tu enlace de pago.',
         paymentLoading: false,
       });
       throw error;
     }
   },
-  
-  
+
+  // Acción para incrementar la cantidad de un producto
+  incrementQuantity: (id) => set((state) => ({
+    products: state.products.map(product =>
+      product.id === id ? { ...product, quantity: product.quantity + 1 } : product
+    )
+  })),
+
+  // Acción para decrementar la cantidad de un producto
+  decrementQuantity: (id) => set((state) => ({
+    products: state.products.map(product =>
+      product.id === id && product.quantity > 0
+        ? { ...product, quantity: product.quantity - 1 } : product
+    )
+  })),
+
+  // Acción para reiniciar todos los productos
+  resetProducts: () => set((state) => ({
+    products: state.products.map(product => ({ ...product, quantity: 0 }))
+  })),
+
   // Guardar detalles de pago
   savePaymentDetails: async (paymentDetails) => {
     set({ paymentLoading: true, paymentError: null });
@@ -95,7 +109,9 @@ export const usePaymentStore = create((set) => ({
     try {
       console.log('Datos del webhook:', webhookData);
 
+
       const response = await axios.post(`${URL}/Pagos/webhook`, webhookData);
+
 
       console.log('Webhook procesado:', response.data);
       set({ paymentLoading: false });
