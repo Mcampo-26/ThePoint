@@ -145,18 +145,22 @@ const Home = () => {
     //setSelectedPaymentMethod(null);
   };
 
-  const handlePayment = async () => {
-    const productName = "La Previa";
-    const qrId = 'id-del-qr';
-    const socketId = socket.id; // Obtener el ID del socket conectado
+ const handlePayment = async () => {
+  const productName = "La Previa"; // Título del producto
+  const qrId = 'id-del-qr'; // ID del QR, parece que no lo estás utilizando en la llamada
+  const socketId = socket.id; // Obtener el ID del socket conectado
   
-    try {
-      await createPaymentLink(productName, totalAmount, selectedProducts, socketId); // Pasar el ID del socket al backend
-      setShowQR(true);
-    } catch (error) {
-      console.error("Error al generar el QR dinámico:", error);
-    }
-  };
+  console.log('Datos que se enviarán:', { productName, totalAmount, selectedProducts, socketId });
+
+  try {
+    // Asegúrate de pasar todos los datos correctamente
+    await createPaymentLink(productName, totalAmount, selectedProducts, socketId);
+    setShowQR(true);
+  } catch (error) {
+    console.error("Error al generar el QR dinámico:", error);
+  }
+};
+
   
 
   const incrementQuantity = (id) => {
