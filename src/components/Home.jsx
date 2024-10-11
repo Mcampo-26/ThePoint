@@ -146,14 +146,12 @@ const Home = () => {
   };
 
  const handlePayment = async () => {
-  const productName = "La Previa"; // Título del producto
-  const qrId = 'id-del-qr'; // ID del QR, parece que no lo estás utilizando en la llamada
+  const productName = "La Previa";
   const socketId = socket.id; // Obtener el ID del socket conectado
-  
+
   console.log('Datos que se enviarán:', { productName, totalAmount, selectedProducts, socketId });
 
   try {
-    // Asegúrate de pasar todos los datos correctamente
     await createPaymentLink(productName, totalAmount, selectedProducts, socketId);
     setShowQR(true);
   } catch (error) {
