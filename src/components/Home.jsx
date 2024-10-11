@@ -147,14 +147,17 @@ const Home = () => {
 
   const handlePayment = async () => {
     const productName = "La Previa";
-    const qrId = 'id-del-qr'; //
+    const qrId = 'id-del-qr';
+    const socketId = socket.id; // Obtener el ID del socket conectado
+  
     try {
-      await createPaymentLink(productName, totalAmount, qrId);
+      await createDynamicQR(productName, totalAmount, selectedProducts, socketId); // Pasar el ID del socket al backend
       setShowQR(true);
     } catch (error) {
-      console.error("Error al generar el enlace de pago:", error);
+      console.error("Error al generar el QR dinámico:", error);
     }
   };
+  
 
   const incrementQuantity = (id) => {
     setLocalProducts(
