@@ -17,7 +17,7 @@ export const usePaymentStore = create((set) => ({
   ],
 
   // Acción para crear enlace de pago
-  createPaymentLink: async (productName, price, selectedProducts) => {
+  createPaymentLink: async (productName, price, selectedProducts, socketId) => {
     set({ paymentLoading: true, paymentError: null });
     try {
       console.log('Datos a enviar al backend:', { title: productName, price: parseFloat(price), products: selectedProducts });
@@ -26,7 +26,8 @@ export const usePaymentStore = create((set) => ({
       const response = await axios.post(`${URL}/Pagos/create-dynamic-qr`, {
         title: productName,
         price: parseFloat(price),
-        products: selectedProducts // Enviar los productos seleccionados
+        products: selectedProducts,
+        socketId  // Enviar los productos seleccionados
       });
   
       console.log('Respuesta del backend (QR dinámico):', response.data); // Verifica lo que viene del backend
