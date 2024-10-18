@@ -225,47 +225,51 @@ const Home = () => {
       </div>
 
       {showQR && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50">
-          <div className="relative bg-white p-8 rounded-lg shadow-lg w-11/12 sm:w-4/5 max-w-lg h-auto">
-            <button
-              className="absolute -top-4 -right-4 text-red-500 hover:text-red-700 bg-white rounded-full p-2"
-              onClick={handleCloseQR}
-            >
-              <FontAwesomeIcon icon={faTimes} size="xl" />
-            </button>
+  <div className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50">
+    <div className="relative bg-white p-8 rounded-lg shadow-lg w-11/12 sm:w-4/5 max-w-lg h-auto">
+      <button
+        className="absolute -top-4 -right-4 text-red-500 hover:text-red-700 bg-white rounded-full p-2"
+        onClick={handleCloseQR}
+      >
+        <FontAwesomeIcon icon={faTimes} size="xl" />
+      </button>
 
-            {/* Botones para elegir el método de pago */}
-            <div className="flex justify-center space-x-4 mb-6">
-              <button
-                className={`${
-                  selectedPaymentMethod === "mercadoPago" ? "bg-blue-500" : "bg-gray-300"
-                } text-white px-4 py-2 rounded-lg`}
-                onClick={() => setSelectedPaymentMethod("mercadoPago")}
-              >
-                Mercado Pago
-              </button>
-              <button
-                className={`${
-                  selectedPaymentMethod === "modo" ? "bg-blue-500" : "bg-gray-300"
-                } text-white px-4 py-2 rounded-lg`}
-                onClick={() => setSelectedPaymentMethod("modo")}
-              >
-                MODO
-              </button>
-            </div>
+      {/* Botones para elegir el método de pago */}
+      <div className="flex justify-center space-x-4 mb-6">
+        <button
+          className={`${
+            selectedPaymentMethod === "mercadoPago" ? "bg-blue-500" : "bg-gray-300"
+          } text-white px-4 py-2 rounded-lg`}
+          onClick={() => setSelectedPaymentMethod("mercadoPago")}
+        >
+          Mercado Pago
+        </button>
+        <button
+          className={`${
+            selectedPaymentMethod === "modo" ? "bg-blue-500" : "bg-gray-300"
+          } text-white px-4 py-2 rounded-lg`}
+          onClick={() => setSelectedPaymentMethod("modo")}
+        >
+          MODO
+        </button>
+      </div>
 
-            {/* QR Code */}
-            <div className="flex justify-center items-center">
-              {selectedPaymentMethod === "mercadoPago" && paymentLink && (
-                <ReactQRCode value={paymentLink} size={300} className="max-w-full h-auto" />
-              )}
-              {selectedPaymentMethod === "modo" && modoQR && (
-                <ReactQRCode value={modoQR} size={300} className="max-w-full h-auto" />
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Renderizar el QR seleccionado */}
+      <div className="flex justify-center items-center">
+        {selectedPaymentMethod === "mercadoPago" && paymentLink && (
+          <ReactQRCode value={paymentLink} size={300} className="max-w-full h-auto" />
+        )}
+        {selectedPaymentMethod === "modo" && modoQR && (
+          <ReactQRCode value={modoQR} size={300} className="max-w-full h-auto" />
+        )}
+        {!modoQR && selectedPaymentMethod === "modo" && (
+          <p>No se pudo generar el QR de MODO.</p>
+        )}
+      </div>
+    </div>
+  </div>
+)}
+
     </div>
   );
 };
