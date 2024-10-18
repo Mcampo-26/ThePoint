@@ -15,13 +15,16 @@ const socket = io("https://thepointback-03939a97aeeb.herokuapp.com", {
 });
 
 const Home = () => {
-  const { createPaymentLink, paymentLink, paymentLoading,createModoCheckout } = usePaymentStore();
-  const { products, fetchProducts, needsUpdate, setNeedsUpdate } = useProductStore();
+  const { createPaymentLink, paymentLink, paymentLoading, createModoCheckout } =
+    usePaymentStore();
+  const { products, fetchProducts, needsUpdate, setNeedsUpdate } =
+    useProductStore();
   const [localProducts, setLocalProducts] = useState([]);
   const [showQR, setShowQR] = useState(false);
   const [modoQR, setModoQR] = useState(null); // Estado para almacenar el QR de MODO
   const [modoDeeplink, setModoDeeplink] = useState(null); // Estado para almacenar el deeplink de MODO
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("mercadoPago"); // Método de pago seleccionado
+  const [selectedPaymentMethod, setSelectedPaymentMethod] =
+    useState("mercadoPago"); // Método de pago seleccionado
 
   useEffect(() => {
     fetchProducts();
@@ -53,7 +56,9 @@ const Home = () => {
   const handlePayment = async () => {
     const productName = "La Previa";
     const socketId = socket.id; // Obtener el ID del socket conectado
-    const selectedProducts = localProducts.filter((product) => product.quantity > 0);
+    const selectedProducts = localProducts.filter(
+      (product) => product.quantity > 0
+    );
     const totalAmount = selectedProducts.reduce(
       (total, product) => total + product.quantity * product.price,
       0
@@ -74,10 +79,19 @@ const Home = () => {
       ]);
 
       // Setear el link de Mercado Pago y los detalles de MODO
-      setModoQR(modoResponse.qr);
-      setModoDeeplink(modoResponse.deeplink);
+      if (mercadoPagoResponse?.paymentLink) {
+        setPaymentLink(mercadoPagoResponse.paymentLink); // Link de Mercado Pago
+      }
 
-      setShowQR(true);
+      if (modoResponse?.qr) {
+        setModoQR(modoResponse.qr); // QR de MODO
+      }
+
+      if (modoResponse?.deeplink) {
+        setModoDeeplink(modoResponse.deeplink); // Deeplink de MODO
+      }
+
+      setShowQR(true); // Mostrar los QRs en pantalla
     } catch (error) {
       console.error("Error al generar los QRs:", error);
     }
@@ -115,7 +129,9 @@ const Home = () => {
     return quantity === 1 ? "unidad" : "unidades";
   };
 
-  const selectedProducts = localProducts.filter((product) => product.quantity > 0);
+  const selectedProducts = localProducts.filter(
+    (product) => product.quantity > 0
+  );
 
   const totalAmount = selectedProducts.reduce(
     (total, product) => total + product.quantity * product.price,
@@ -135,7 +151,11 @@ const Home = () => {
         </h1>
       </div>
 
-      <div className={`flex flex-col lg:flex-row w-full -mt-10 ${showQR ? "blur-md" : ""}`}>
+      <div
+        className={`flex flex-col lg:flex-row w-full -mt-10 ${
+          showQR ? "blur-md" : ""
+        }`}
+      >
         <div className="flex-1 grid grid-cols-1 gap-6 px-4 md:px-8 mt-20">
           {localProducts.map((product) => (
             <div
@@ -159,7 +179,9 @@ const Home = () => {
                 >
                   -
                 </button>
-                <span className="text-lg md:text-xl font-bold">{product.quantity}</span>
+                <span className="text-lg md:text-xl font-bold">
+                  {product.quantity}
+                </span>
                 <button
                   className="bg-green-500 text-white px-2 md:px-4 py-1 md:py-2 rounded"
                   onClick={() => incrementQuantity(product._id)}
@@ -179,12 +201,17 @@ const Home = () => {
             <div className="bg-white shadow-md rounded-lg p-4">
               <ul className="divide-y divide-gray-200">
                 {selectedProducts.map((product) => (
-                  <li key={product._id} className="flex justify-between items-center py-4">
+                  <li
+                    key={product._id}
+                    className="flex justify-between items-center py-4"
+                  >
                     <div className="flex flex-col sm:flex-row items-center space-x-2 md:space-x-4">
                       <span className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm">
                         {product.quantity} {formatUnits(product.quantity)}
                       </span>
-                      <span className="font-medium text-gray-700">{product.name}</span>
+                      <span className="font-medium text-gray-700">
+                        {product.name}
+                      </span>
                     </div>
                     <button
                       className="text-red-500 hover:text-red-700 font-medium"
@@ -208,7 +235,9 @@ const Home = () => {
               </div>
             </div>
           ) : (
-            <p className="text-gray-500 text-center">No has seleccionado ningún producto.</p>
+            <p className="text-gray-500 text-center">
+              No has seleccionado ningún producto.
+            </p>
           )}
 
           {selectedProducts.length > 0 && (
@@ -217,7 +246,9 @@ const Home = () => {
                 className="bg-blue-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg shadow-lg hover:bg-blue-700 transition duration-300 w-full"
                 onClick={handlePayment}
               >
-                {paymentLoading ? "Generando enlace..." : `Comprar por $${totalAmount}`}
+                {paymentLoading
+                  ? "Generando enlace..."
+                  : `Comprar por $${totalAmount}`}
               </button>
             </div>
           )}
@@ -234,7 +265,6 @@ const Home = () => {
         <FontAwesomeIcon icon={faTimes} size="xl" />
       </button>
 
-      {/* Botones para elegir el método de pago */}
       <div className="flex justify-center space-x-4 mb-6">
         <button
           className={`${
@@ -254,22 +284,17 @@ const Home = () => {
         </button>
       </div>
 
-      {/* Renderizar el QR seleccionado */}
       <div className="flex justify-center items-center">
-        {selectedPaymentMethod === "mercadoPago" && paymentLink && (
+        {selectedPaymentMethod === "mercadoPago" && (
           <ReactQRCode value={paymentLink} size={300} className="max-w-full h-auto" />
         )}
         {selectedPaymentMethod === "modo" && modoQR && (
           <ReactQRCode value={modoQR} size={300} className="max-w-full h-auto" />
         )}
-        {!modoQR && selectedPaymentMethod === "modo" && (
-          <p>No se pudo generar el QR de MODO.</p>
-        )}
       </div>
     </div>
   </div>
 )}
-
     </div>
   );
 };
