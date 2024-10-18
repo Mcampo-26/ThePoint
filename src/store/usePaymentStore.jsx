@@ -73,7 +73,7 @@ export const usePaymentStore = create((set) => ({
       paymentLoading: false,
     });
     throw error;
-  }
+  },
   // Guardar detalles de pago
   savePaymentDetails: async (paymentDetails) => {
     set({ paymentLoading: true, paymentError: null });
