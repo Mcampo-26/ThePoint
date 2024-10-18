@@ -49,6 +49,7 @@ export const usePaymentStore = create((set) => ({
     try {
       const response = await axios.post(`${URL}/Pagos/create_modo`, {
         price: parseFloat(price),
+        details 
       });
   
       const { qr_url, deeplink } = response.data;
