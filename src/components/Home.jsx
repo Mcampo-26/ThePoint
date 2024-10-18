@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash, faTimes } from "@fortawesome/free-solid-svg-icons";
-import { usePaymentStore } from "../store/usePaymentStore";
+import { usePaymentStore } from "../store/usePaymentStore"; // Asegúrate de que está bien importado
 import { useProductStore } from "../store/useProductStore";
 import ReactQRCode from "react-qr-code";
 import Swal from "sweetalert2";
