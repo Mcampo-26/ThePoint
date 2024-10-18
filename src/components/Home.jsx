@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash, faTimes } from "@fortawesome/free-solid-svg-icons";
-import { usePaymentStore } from "../store/usePaymentStore"; // Asegúrate de que está bien importado
+import { usePaymentStore } from "../store/usePaymentStore"; // Asegúrate de que usePaymentStore esté correctamente importado
 import { useProductStore } from "../store/useProductStore";
-import ReactQRCode from "react-qr-code";
 import Swal from "sweetalert2";
 import io from "socket.io-client";
 
@@ -15,13 +14,13 @@ const socket = io("https://thepointback-03939a97aeeb.herokuapp.com", {
 });
 
 const Home = () => {
-  const { createPaymentLink, createModoCheckout, paymentLink, modoQRCodeURL, paymentLoading } = usePaymentStore();
+  // Cambia createPaymentLink a createDynamicQR
+  const { createDynamicQR, paymentLink, qrCodeURL, paymentLoading } = usePaymentStore();
   const { products, fetchProducts, needsUpdate, setNeedsUpdate } = useProductStore();
   const [localProducts, setLocalProducts] = useState([]); // Para gestionar cantidades de productos seleccionados
   const [showQR, setShowQR] = useState(false); // Estado para mostrar/ocultar el QR
   const [paymentStatus, setPaymentStatus] = useState(null); // Estado del pago
   const [paymentId, setPaymentId] = useState(null); // ID del pago
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("mercadoPago"); // Estado para seleccionar el método de pago
 
   useEffect(() => {
     fetchProducts();
@@ -140,27 +139,34 @@ const Home = () => {
 
   const handleCloseQR = () => {
     setShowQR(false);
-    setSelectedPaymentMethod(null);
   };
 
+  // Cambia el nombre de la función para llamar a createDynamicQR
   const handlePayment = async () => {
+    const productName = "La Previa";
+    const socketId = socket.id; // Obtener el ID del socket conectado
+    const selectedProducts = localProducts.filter((product) => product.quantity > 0);
     const totalAmount = selectedProducts.reduce(
       (total, product) => total + product.quantity * product.price,
       0
     );
-    const socketId = socket.id; // Obtener el ID del socket conectado
   
     try {
-      if (selectedPaymentMethod === "mercadoPago") {
-        await createPaymentLink("La Previa", totalAmount, selectedProducts, socketId);
-      } else if (selectedPaymentMethod === "modo") {
-        await createModoCheckout(totalAmount);
-      }
-      setShowQR(true);
+      // Ejecutar ambas funciones de manera concurrente
+      const [mercadoPagoResponse, modoResponse] = await Promise.all([
+        createDynamicQR(productName, totalAmount, selectedProducts, socketId), // Mercado Pago
+        createModoCheckout(totalAmount) // MODO
+      ]);
+  
+      console.log("QR de Mercado Pago generado:", mercadoPagoResponse); // Ver la respuesta de Mercado Pago
+      console.log("QR de MODO generado:", modoResponse); // Ver la respuesta de MODO
+  
+      setShowQR(true); // Mostrar el QR después de la creación exitosa
     } catch (error) {
-      console.error("Error al generar el QR:", error);
+      console.error("Error al generar los QRs:", error);
     }
   };
+  
 
   const incrementQuantity = (id) => {
     setLocalProducts(
@@ -303,7 +309,7 @@ const Home = () => {
         </div>
       </div>
 
-      {showQR && (
+      {showQR && qrCodeURL && (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50">
           <div className="relative bg-white p-8 rounded-lg shadow-lg w-11/12 sm:w-4/5 max-w-lg h-auto">
             <button
@@ -313,34 +319,8 @@ const Home = () => {
               <FontAwesomeIcon icon={faTimes} size="xl" />
             </button>
 
-            {/* Botones para elegir el método de pago */}
-            <div className="flex justify-center space-x-4 mb-6">
-              <button
-                className={`${
-                  selectedPaymentMethod === "mercadoPago" ? "bg-blue-500" : "bg-gray-300"
-                } text-white px-4 py-2 rounded-lg`}
-                onClick={() => setSelectedPaymentMethod("mercadoPago")}
-              >
-                Mercado Pago
-              </button>
-              <button
-                className={`${
-                  selectedPaymentMethod === "modo" ? "bg-blue-500" : "bg-gray-300"
-                } text-white px-4 py-2 rounded-lg`}
-                onClick={() => setSelectedPaymentMethod("modo")}
-              >
-                MODO
-              </button>
-            </div>
-
-            {/* Renderizar QR */}
             <div className="flex justify-center items-center">
-              {selectedPaymentMethod === "mercadoPago" && paymentLink && (
-                <ReactQRCode value={paymentLink} size={300} className="max-w-full h-auto" />
-              )}
-              {selectedPaymentMethod === "modo" && modoQRCodeURL && (
-                <ReactQRCode value={modoQRCodeURL} size={300} className="max-w-full h-auto" />
-              )}
+              <img src={qrCodeURL} alt="Código QR para pago" className="max-w-full h-auto" />
             </div>
           </div>
         </div>
