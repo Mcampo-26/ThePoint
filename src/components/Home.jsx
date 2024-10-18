@@ -162,7 +162,7 @@ const Home = () => {
       // Ejecutar ambas funciones de manera concurrente
       const [mercadoPagoResponse, modoResponse] = await Promise.all([
         createPaymentLink(productName, totalAmount, selectedProducts, socketId), // Mercado Pago
-        createModoCheckout(totalAmount, details) // MODO (ahora con detalles)
+        createModoCheckout(totalAmount, selectedProducts) // MODO (ahora con detalles)
       ]);
   
       console.log("QR de Mercado Pago generado:", mercadoPagoResponse); // Ver la respuesta de Mercado Pago
