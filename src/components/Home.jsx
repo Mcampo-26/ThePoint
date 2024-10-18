@@ -78,6 +78,7 @@ const Home = () => {
     setPaymentId(paymentId);
 
     if (status === "approved") {
+      printTickets(selectedProducts);
       await Swal.fire({
         title: "¡Pago Exitoso!",
         text: "Gracias por tu compra.",
@@ -87,7 +88,6 @@ const Home = () => {
       });
       handleCloseQR();
       setTimeout(() => {
-        printTickets(selectedProducts);
          window.location.reload();
       }, 100);
     } else if (status === "rejected") {
