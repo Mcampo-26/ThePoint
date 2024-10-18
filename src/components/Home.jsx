@@ -6,6 +6,7 @@ import { useProductStore } from "../store/useProductStore";
 import ReactQRCode from "react-qr-code";
 import Swal from "sweetalert2";
 import io from "socket.io-client";
+import { QRCode } from 'qrcode.react';
 
 // URL de tu servidor WebSocket en Heroku
 const socket = io("https://thepointback-03939a97aeeb.herokuapp.com", {
@@ -298,9 +299,9 @@ export const Home = () => {
               {selectedPaymentMethod === "mercadoPago" && paymentLink && (
                 <ReactQRCode value={paymentLink} size={300} className="max-w-full h-auto" />
               )}
-              {selectedPaymentMethod === "modo" && modoQR && (
-                <ReactQRCode value={modoQR} size={300} className="max-w-full h-auto" />
-              )}
+             {selectedPaymentMethod === "modo" && modoQR && (
+  <QRCode value={modoQR} size={300} />
+)}
             </div>
           </div>
         </div>
@@ -308,4 +309,5 @@ export const Home = () => {
     </div>
   );
   };
+
   export default Home;
