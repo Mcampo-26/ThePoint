@@ -14,7 +14,7 @@ const socket = io("https://thepointback-03939a97aeeb.herokuapp.com", {
   reconnectionDelay: 3000,
 });
 
-export const Home = () => {
+ const Home = () => {
   const { createPaymentLink, paymentLink, paymentLoading } = usePaymentStore();
   const { products, fetchProducts, needsUpdate, setNeedsUpdate } = useProductStore();
   const [modoQR, setModoQR] = useState(null); // Estado para almacenar el QR de MODO
@@ -308,3 +308,4 @@ export const Home = () => {
     </div>
   );
   };
+export default Home;
