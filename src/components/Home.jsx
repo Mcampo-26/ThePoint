@@ -143,37 +143,37 @@ const Home = () => {
 
   // Cambia el nombre de la función para llamar a createDynamicQR
   const handlePayment = async () => {
-  const productName = "La Previa";
-  const socketId = socket.id; // Obtener el ID del socket conectado
-  const selectedProducts = localProducts.filter((product) => product.quantity > 0);
-  const totalAmount = selectedProducts.reduce(
-    (total, product) => total + product.quantity * product.price,
-    0
-  );
-
-  // Crear un array con los detalles del producto
-  const details = selectedProducts.map((product) => ({
-    productName: product.name, // Nombre del producto
-    quantity: product.quantity, // Cantidad
-    price: product.price,       // Precio
-  }));
-
-  try {
-    // Ejecutar ambas funciones de manera concurrente
-    const [mercadoPagoResponse, modoResponse] = await Promise.all([
-      createPaymentLink(productName, totalAmount, selectedProducts, socketId), // Mercado Pago
-      createModoCheckout(totalAmount, details) // MODO (ahora con detalles)
-    ]);
-
-    console.log("QR de Mercado Pago generado:", mercadoPagoResponse); // Ver la respuesta de Mercado Pago
-    console.log("QR de MODO generado:", modoResponse); // Ver la respuesta de MODO
-
-    setShowQR(true); // Mostrar el QR después de la creación exitosa
-  } catch (error) {
-    console.error("Error al generar los QRs:", error);
-  }
-};
-
+    const productName = "La Previa";
+    const socketId = socket.id; // Obtener el ID del socket conectado
+    const selectedProducts = localProducts.filter((product) => product.quantity > 0);
+    const totalAmount = selectedProducts.reduce(
+      (total, product) => total + product.quantity * product.price,
+      0
+    );
+  
+    // Crear un array con los detalles del producto
+    const details = selectedProducts.map((product) => ({
+      productName: product.name, // Nombre del producto
+      quantity: product.quantity, // Cantidad
+      price: product.price,       // Precio
+    }));
+  
+    try {
+      // Ejecutar ambas funciones de manera concurrente
+      const [mercadoPagoResponse, modoResponse] = await Promise.all([
+        createPaymentLink(productName, totalAmount, selectedProducts, socketId), // Mercado Pago
+        createModoCheckout(totalAmount, details) // MODO (ahora con detalles)
+      ]);
+  
+      console.log("QR de Mercado Pago generado:", mercadoPagoResponse); // Ver la respuesta de Mercado Pago
+      console.log("QR de MODO generado:", modoResponse); // Ver la respuesta de MODO
+  
+      setShowQR(true); // Mostrar el QR después de la creación exitosa
+    } catch (error) {
+      console.error("Error al generar los QRs:", error);
+    }
+  };
+  
   
 
   const incrementQuantity = (id) => {
