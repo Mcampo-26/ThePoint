@@ -51,11 +51,15 @@ export const usePaymentStore = create((set) => ({
       price: parseFloat(price),
       details: details // Asegúrate de enviar el array details aquí
     });
+    
+    // Aquí añadimos el console.log para ver la respuesta completa de la API
+    console.log("Respuesta de MODO:", response.data); 
 
     const { qr_url, deeplink } = response.data;
     set({ paymentLoading: false, modoQRCodeURL: qr_url, modoDeeplink: deeplink });
     return { qr_url, deeplink };
   } catch (error) {
+    console.error("Error al crear el checkout de MODO:", error.response ? error.response.data : error.message); // Mostrar error detallado en consola
     set({
       paymentError: 'Hubo un problema al crear el checkout de MODO.',
       paymentLoading: false,
@@ -63,6 +67,7 @@ export const usePaymentStore = create((set) => ({
     throw error;
   }
 },
+
 
   // Guardar detalles de pago
   savePaymentDetails: async (paymentDetails) => {
