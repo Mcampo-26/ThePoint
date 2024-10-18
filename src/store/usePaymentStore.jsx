@@ -55,9 +55,8 @@ export const usePaymentStore = create((set) => ({
     // Desestructura la respuesta que recibiste del backend
     const { qr, deeplink } = response.data;
 
-    // Agrega el console.log para ver la respuesta
+    // Agrega el console.log para verificar la respuesta
     console.log("Respuesta de MODO:", response.data);
-     console.log("Respuesta de MODO:", { qr, deeplink });
     console.log("QR recibido en el frontend:", qr);
 
     // Guarda los datos en el estado de Zustand
@@ -75,8 +74,6 @@ export const usePaymentStore = create((set) => ({
     });
     throw error;
   }
-},
-
   // Guardar detalles de pago
   savePaymentDetails: async (paymentDetails) => {
     set({ paymentLoading: true, paymentError: null });
