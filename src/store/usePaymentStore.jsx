@@ -58,6 +58,7 @@ export const usePaymentStore = create((set) => ({
     // Agrega el console.log para ver la respuesta
     console.log("Respuesta de MODO:", response.data);
      console.log("Respuesta de MODO:", { qr, deeplink });
+    console.log("QR recibido en el frontend:", qr);
 
     // Guarda los datos en el estado de Zustand
     set({
