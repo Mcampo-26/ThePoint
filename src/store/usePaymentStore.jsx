@@ -45,29 +45,32 @@ export const usePaymentStore = create((set) => ({
 
   // Acción para crear checkout de MODO
   createModoCheckout: async (price, details) => {
-  set({ paymentLoading: true, paymentError: null });
-  try {
-    const response = await axios.post(`${URL}/Pagos/create_modo`, {
-      price: parseFloat(price),
-      details: details // Asegúrate de enviar el array details aquí
-    });
-    
-    // Aquí añadimos el console.log para ver la respuesta completa de la API
-    console.log("Respuesta de MODO:", response.data); 
+    set({ paymentLoading: true, paymentError: null });
+    try {
+      const response = await axios.post(`${URL}/Pagos/create_modo`, {
+        price: parseFloat(price),
+        details: details,
+      });
 
-    const { qr_url, deeplink } = response.data;
-    set({ paymentLoading: false, modoQRCodeURL: qr_url, modoDeeplink: deeplink });
-    return { qr_url, deeplink };
-  } catch (error) {
-    console.error("Error al crear el checkout de MODO:", error.response ? error.response.data : error.message); // Mostrar error detallado en consola
-    set({
-      paymentError: 'Hubo un problema al crear el checkout de MODO.',
-      paymentLoading: false,
-    });
-    throw error;
-  }
-},
+      // Desestructura la respuesta que recibiste del backend
+      const { qr, deeplink } = response.data;
 
+      // Guarda los datos en el estado de Zustand
+      set({
+        paymentLoading: false,
+        modoQRCodeURL: qr, // El código QR en formato de cadena
+        modoDeeplink: deeplink, // El deep link
+      });
+
+      return { qr, deeplink };
+    } catch (error) {
+      set({
+        paymentError: 'Hubo un problema al crear el checkout de MODO.',
+        paymentLoading: false,
+      });
+      throw error;
+    }
+  },
 
   // Guardar detalles de pago
   savePaymentDetails: async (paymentDetails) => {
