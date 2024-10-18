@@ -319,21 +319,30 @@ const Home = () => {
       </div>
 
       {showQR && qrCodeURL && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50">
-          <div className="relative bg-white p-8 rounded-lg shadow-lg w-11/12 sm:w-4/5 max-w-lg h-auto">
-            <button
-              className="absolute -top-4 -right-4 text-red-500 hover:text-red-700 bg-white rounded-full p-2"
-              onClick={handleCloseQR}
-            >
-              <FontAwesomeIcon icon={faTimes} size="xl" />
-            </button>
+  <div className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50">
+    <div className="relative bg-white p-8 rounded-lg shadow-lg w-11/12 sm:w-4/5 max-w-lg h-auto">
+      <button
+        className="absolute -top-4 -right-4 text-red-500 hover:text-red-700 bg-white rounded-full p-2"
+        onClick={handleCloseQR}
+      >
+        <FontAwesomeIcon icon={faTimes} size="xl" />
+      </button>
 
-            <div className="flex justify-center items-center">
-              <img src={qrCodeURL} alt="Código QR para pago" className="max-w-full h-auto" />
-            </div>
-          </div>
-        </div>
-      )}
+      <div className="flex justify-center items-center">
+        {qrCodeURL.includes('http') ? (
+          // Renderizar el deeplink como un botón si no hay qr_url
+          <a href={qrCodeURL} target="_blank" rel="noopener noreferrer" className="btn btn-primary">
+            Pagar en MODO
+          </a>
+        ) : (
+          // Mostrar el código QR
+          <img src={qrCodeURL} alt="Código QR para pago" className="max-w-full h-auto" />
+        )}
+      </div>
+    </div>
+  </div>
+)}
+
     </div>
   );
 };
