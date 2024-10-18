@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash, faTimes } from "@fortawesome/free-solid-svg-icons";
-import { usePaymentStore } from "../store/usePaymentStore"; // Asegúrate de que usePaymentStore esté correctamente importado
+import { usePaymentStore } from "../store/usePaymentStore";
 import { useProductStore } from "../store/useProductStore";
+import ReactQRCode from "react-qr-code";
 import Swal from "sweetalert2";
 import io from "socket.io-client";
 
@@ -14,13 +15,13 @@ const socket = io("https://thepointback-03939a97aeeb.herokuapp.com", {
 });
 
 const Home = () => {
-  // Cambia createPaymentLink a createDynamicQR
-  const {createPaymentLink, qrCodeURL, paymentLoading,createModoCheckout } = usePaymentStore();
+  const { createPaymentLink, paymentLink, paymentLoading } = usePaymentStore();
   const { products, fetchProducts, needsUpdate, setNeedsUpdate } = useProductStore();
-  const [localProducts, setLocalProducts] = useState([]); // Para gestionar cantidades de productos seleccionados
-  const [showQR, setShowQR] = useState(false); // Estado para mostrar/ocultar el QR
-  const [paymentStatus, setPaymentStatus] = useState(null); // Estado del pago
-  const [paymentId, setPaymentId] = useState(null); // ID del pago
+  const [localProducts, setLocalProducts] = useState([]);
+  const [showQR, setShowQR] = useState(false);
+  const [modoQR, setModoQR] = useState(null); // Estado para almacenar el QR de MODO
+  const [modoDeeplink, setModoDeeplink] = useState(null); // Estado para almacenar el deeplink de MODO
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("mercadoPago"); // Método de pago seleccionado
 
   useEffect(() => {
     fetchProducts();
@@ -45,103 +46,10 @@ const Home = () => {
     localStorage.setItem("selectedProducts", JSON.stringify(localProducts));
   }, [localProducts]);
 
-  useEffect(() => {
-    socket.on("connect", () => {
-      console.log("Conectado al servidor WebSocket");
-    });
-
-    socket.on("paymentSuccess", ({ status, paymentId }) => {
-      handlePaymentResult(status, paymentId);
-    });
-
-    socket.on("disconnect", () => {
-      console.log("Desconectado del servidor WebSocket");
-    });
-
-    return () => {
-      socket.off("paymentSuccess");
-      socket.disconnect();
-    };
-  }, []);
-
-  // Función para manejar el resultado del pago
-  const handlePaymentResult = async (status, paymentId) => {
-    const storedProducts = JSON.parse(localStorage.getItem("selectedProducts")) || [];
-    const selectedProducts = storedProducts.filter((product) => product.quantity > 0);
-
-    setPaymentStatus(status);
-    setPaymentId(paymentId);
-
-    if (status === "approved") {
-      await Swal.fire({
-        title: "¡Pago Exitoso!",
-        text: "Gracias por tu compra.",
-        icon: "success",
-        showConfirmButton: false,
-        timer: 2000,
-      });
-      handleCloseQR();
-      setTimeout(() => {
-        printTickets(selectedProducts);
-        window.location.reload();
-      }, 100);
-    } else if (status === "rejected") {
-      await Swal.fire({
-        title: "Pago Rechazado",
-        text: "Lamentablemente, el pago fue rechazado.",
-        icon: "error",
-        showConfirmButton: false,
-        timer: 2000,
-      });
-    }
-  };
-
-  const printTickets = (selectedProducts) => {
-    let ticketContent = selectedProducts
-      .map((product) =>
-        Array.from({ length: product.quantity })
-          .map(
-            () => `
-              <div class="ticket-container">
-                <h2 class="ticket-title">1x</h2>
-                <p class="ticket-item">${product.name}</p>
-                <h2 class="ticket-footer">Precio: ${product.price}</h2>
-              </div>`
-          )
-          .join("")
-      )
-      .join("");
-
-    const printWindow = window.open("", "", "width=500,height=500");
-    if (!printWindow) {
-      alert("Error: El navegador bloqueó la ventana de impresión. Permita las ventanas emergentes.");
-      return;
-    }
-
-    printWindow.document.write(`
-      <html>
-        <head>
-          <style>
-            body { text-align: center; margin: 0; padding: 0; height: auto; }
-            .ticket-container { width: 100%; height: auto; }
-            .ticket-title { font-size: 20px; margin-top: 1px; }
-            .ticket-item { font-size: 55px; margin-top: -15px; }
-            .ticket-footer { font-size: 10px; margin-top: -20px; }
-          </style>
-        </head>
-        <body onload="window.print();window.close()">
-          ${ticketContent}
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
-  };
-
   const handleCloseQR = () => {
     setShowQR(false);
   };
 
-  // Cambia el nombre de la función para llamar a createDynamicQR
   const handlePayment = async () => {
     const productName = "La Previa";
     const socketId = socket.id; // Obtener el ID del socket conectado
@@ -150,32 +58,30 @@ const Home = () => {
       (total, product) => total + product.quantity * product.price,
       0
     );
-  
-    // Crear un array con los detalles del producto
+
+    // Crear un array con los detalles del producto para MODO
     const details = selectedProducts.map((product) => ({
-      productName: product.name, // Nombre del producto
-      quantity: product.quantity, // Cantidad
-      price: product.price,       // Precio
+      productName: product.name,
+      quantity: product.quantity,
+      price: product.price,
     }));
-  
+
     try {
-      // Ejecutar ambas funciones de manera concurrente
+      // Crear QR tanto para Mercado Pago como para MODO
       const [mercadoPagoResponse, modoResponse] = await Promise.all([
-        createPaymentLink(productName, totalAmount, selectedProducts, socketId), // Mercado Pago
-        createModoCheckout(totalAmount, details) // MODO (ahora con detalles)
+        createPaymentLink(productName, totalAmount, selectedProducts, socketId),
+        createModoCheckout(totalAmount, details),
       ]);
-  
-      console.log("QR de Mercado Pago generado:", mercadoPagoResponse); // Ver la respuesta de Mercado Pago
-      console.log("QR de MODO generado:", modoResponse); // Ver la respuesta de MODO
-  
-      setShowQR(true); // Mostrar el QR después de la creación exitosa
+
+      // Setear el link de Mercado Pago y los detalles de MODO
+      setModoQR(modoResponse.qr);
+      setModoDeeplink(modoResponse.deeplink);
+
+      setShowQR(true);
     } catch (error) {
       console.error("Error al generar los QRs:", error);
     }
   };
-  
-  
-  
 
   const incrementQuantity = (id) => {
     setLocalProducts(
@@ -318,31 +224,48 @@ const Home = () => {
         </div>
       </div>
 
-      {showQR && qrCodeURL && (
-  <div className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50">
-    <div className="relative bg-white p-8 rounded-lg shadow-lg w-11/12 sm:w-4/5 max-w-lg h-auto">
-      <button
-        className="absolute -top-4 -right-4 text-red-500 hover:text-red-700 bg-white rounded-full p-2"
-        onClick={handleCloseQR}
-      >
-        <FontAwesomeIcon icon={faTimes} size="xl" />
-      </button>
+      {showQR && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50">
+          <div className="relative bg-white p-8 rounded-lg shadow-lg w-11/12 sm:w-4/5 max-w-lg h-auto">
+            <button
+              className="absolute -top-4 -right-4 text-red-500 hover:text-red-700 bg-white rounded-full p-2"
+              onClick={handleCloseQR}
+            >
+              <FontAwesomeIcon icon={faTimes} size="xl" />
+            </button>
 
-      <div className="flex justify-center items-center">
-        {qrCodeURL.includes('http') ? (
-          // Renderizar el deeplink como un botón si no hay qr_url
-          <a href={qrCodeURL} target="_blank" rel="noopener noreferrer" className="btn btn-primary">
-            Pagar en MODO
-          </a>
-        ) : (
-          // Mostrar el código QR
-          <img src={qrCodeURL} alt="Código QR para pago" className="max-w-full h-auto" />
-        )}
-      </div>
-    </div>
-  </div>
-)}
+            {/* Botones para elegir el método de pago */}
+            <div className="flex justify-center space-x-4 mb-6">
+              <button
+                className={`${
+                  selectedPaymentMethod === "mercadoPago" ? "bg-blue-500" : "bg-gray-300"
+                } text-white px-4 py-2 rounded-lg`}
+                onClick={() => setSelectedPaymentMethod("mercadoPago")}
+              >
+                Mercado Pago
+              </button>
+              <button
+                className={`${
+                  selectedPaymentMethod === "modo" ? "bg-blue-500" : "bg-gray-300"
+                } text-white px-4 py-2 rounded-lg`}
+                onClick={() => setSelectedPaymentMethod("modo")}
+              >
+                MODO
+              </button>
+            </div>
 
+            {/* QR Code */}
+            <div className="flex justify-center items-center">
+              {selectedPaymentMethod === "mercadoPago" && paymentLink && (
+                <ReactQRCode value={paymentLink} size={300} className="max-w-full h-auto" />
+              )}
+              {selectedPaymentMethod === "modo" && modoQR && (
+                <ReactQRCode value={modoQR} size={300} className="max-w-full h-auto" />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
