@@ -84,7 +84,7 @@ const Home = () => {
         text: "Gracias por tu compra.",
         icon: "success",
         showConfirmButton: false,
-        timer: 2000,
+        timer: 6000,
       });
       handleCloseQR();
       setTimeout(() => {
