@@ -15,7 +15,7 @@ const socket = io("https://thepointback-03939a97aeeb.herokuapp.com", {
 
 const Home = () => {
   // Cambia createPaymentLink a createDynamicQR
-  const { createDynamicQR, paymentLink, qrCodeURL, paymentLoading } = usePaymentStore();
+  const { createDynamicQR, paymentLink, qrCodeURL, paymentLoading,createModoCheckout } = usePaymentStore();
   const { products, fetchProducts, needsUpdate, setNeedsUpdate } = useProductStore();
   const [localProducts, setLocalProducts] = useState([]); // Para gestionar cantidades de productos seleccionados
   const [showQR, setShowQR] = useState(false); // Estado para mostrar/ocultar el QR
