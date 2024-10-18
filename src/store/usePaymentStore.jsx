@@ -44,36 +44,38 @@ export const usePaymentStore = create((set) => ({
   },
 
   // Acción para crear checkout de MODO
- createModoCheckout: async (price, details) => {
-  set({ paymentLoading: true, paymentError: null });
-  try {
-    const response = await axios.post(`${URL}/Pagos/create_modo`, {
-      price: parseFloat(price),
-      details: details,
-    });
+  createModoCheckout: async (price, details) => {
+    set({ paymentLoading: true, paymentError: null });
+    try {
+      const response = await axios.post(`${URL}/Pagos/create_modo`, {
+        price: parseFloat(price),
+        details: details,
+      });
 
-    // Desestructura la respuesta que recibiste del backend
-    const { qr, deeplink } = response.data;
+      // Desestructura la respuesta que recibiste del backend
+      const { qr, deeplink } = response.data;
 
-    // Agrega el console.log para verificar la respuesta
-    console.log("Respuesta de MODO:", response.data);
-    console.log("QR recibido en el frontend:", qr);
+      // Agrega el console.log para verificar la respuesta
+      console.log("Respuesta de MODO:", response.data);
+      console.log("QR recibido en el frontend:", qr);
 
-    // Guarda los datos en el estado de Zustand
-    set({
-      paymentLoading: false,
-      modoQRCodeURL: qr, // El código QR en formato de cadena
-      modoDeeplink: deeplink, // El deep link
-    });
+      // Guarda los datos en el estado de Zustand
+      set({
+        paymentLoading: false,
+        modoQRCodeURL: qr, // El código QR en formato de cadena
+        modoDeeplink: deeplink, // El deep link
+      });
 
-    return { qr, deeplink };
-  } catch (error) {
-    set({
-      paymentError: 'Hubo un problema al crear el checkout de MODO.',
-      paymentLoading: false,
-    });
-    throw error;
-  },
+      return { qr, deeplink };
+    } catch (error) {
+      set({
+        paymentError: 'Hubo un problema al crear el checkout de MODO.',
+        paymentLoading: false,
+      });
+      throw error;
+    }
+  }, // Aquí va el punto y coma
+
   // Guardar detalles de pago
   savePaymentDetails: async (paymentDetails) => {
     set({ paymentLoading: true, paymentError: null });
