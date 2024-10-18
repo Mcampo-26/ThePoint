@@ -55,14 +55,15 @@ export const usePaymentStore = create((set) => ({
     // Desestructura la respuesta
     const { qr, deeplink } = response.data;
 
-    // Verifica si 'qr' llega bien
-    console.log("QR recibido en el frontend:", qr); // Asegúrate de que el 'qr' no sea undefined aquí.
+    // Agrega el console.log para verificar la respuesta
+    console.log("Respuesta de MODO:", response.data); // Asegúrate de que esto muestra correctamente los datos
+    console.log("QR recibido en el frontend:", qr);
 
     // Guarda los datos en el estado de Zustand
     set({
       paymentLoading: false,
-      modoQRCodeURL: qr, // Aquí es donde guardas el QR
-      modoDeeplink: deeplink, // Y aquí el deeplink
+      modoQRCodeURL: qr, // El código QR en formato de cadena
+      modoDeeplink: deeplink, // El deep link
     });
 
     return { qr, deeplink };
