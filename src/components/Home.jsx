@@ -307,8 +307,8 @@ export const Home = () => {
               <button
                 className={`flex justify-center items-center w-40  h-16 rounded-md shadow-md border border-gray-300 transition-shadow duration-200 ${
                   selectedPaymentMethod === "mercadoPago"
-                    ? "shadow-lg border-blue-600 bg-gray-100"
-                    : "hover:shadow-lg hover:border-blue-400"
+                    ? "shadow-lg border-blue-600 bg-blue-100"
+                    : "hover:shadow-lg hover:border-green-100"
                 } mr-8`}
                 onClick={() => setSelectedPaymentMethod("mercadoPago")}
               >
@@ -321,8 +321,8 @@ export const Home = () => {
               <button
                 className={`flex justify-center items-center w-32 h-16 rounded-md shadow-md border border-gray-300 transition-shadow duration-200 ${
                   selectedPaymentMethod === "modo"
-                    ? "shadow-lg border-blue-500 bg-gray-100"
-                    : "hover:shadow-lg hover:border-blue-300"
+                    ? "shadow-lg border-blue-500 bg-blue-100"
+                    : "hover:shadow-lg hover:border-green-100"
                 } ml-10`}
                 onClick={() => setSelectedPaymentMethod("modo")}
               >
