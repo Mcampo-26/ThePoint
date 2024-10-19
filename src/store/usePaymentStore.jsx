@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import axios from 'axios';
-import { URL} from '../utilities/config.js';
+import { URL } from '../utilities/config.js';
 
 export const usePaymentStore = create((set) => ({
   // Estado de pagos
@@ -10,27 +10,22 @@ export const usePaymentStore = create((set) => ({
   qrCodeURL: null, 
   modoQRCodeURL: null,
   modoDeeplink: null,
-
-  // Estado de productos
-  products: [
+  
+  products: JSON.parse(localStorage.getItem('selectedProducts')) || [
     { id: 1, name: 'Cerveza', price: 200, quantity: 0 },
     { id: 2, name: 'Fernet', price: 300, quantity: 0 },
     { id: 3, name: 'Gin', price: 400, quantity: 0 },
     { id: 4, name: 'Vodka', price: 500, quantity: 0 },
   ],
 
-  // Acción para crear enlace de pago
+  // Acción para crear QR dinámico de Mercado Pago
   createPaymentLink: async (productName, price) => {
     set({ paymentLoading: true, paymentError: null });
     try {
-      console.log('Datos a enviar al backend:', { title: productName, price: parseFloat(price) });
-
       const response = await axios.post(`${URL}/Pagos/create_payment_link`, {
-        title: productName, // Enviar el título del producto
-        price: parseFloat(price), // Asegurarse de que el precio sea un número
+        title: productName,
+        price: parseFloat(price),
       });
-
-      console.log('Respuesta de Mercado Pago:', response.data);
 
       const paymentLink = response.data.paymentLink;
       if (paymentLink) {
@@ -40,7 +35,6 @@ export const usePaymentStore = create((set) => ({
         throw new Error('No se recibió un enlace de pago en la respuesta');
       }
     } catch (error) {
-      console.error('Error al crear el enlace de pago:', error);
       set({
         paymentError: 'Hubo un problema al generar tu enlace de pago.',
         paymentLoading: false,
@@ -49,114 +43,45 @@ export const usePaymentStore = create((set) => ({
     }
   },
 
+  // Acción para crear checkout de MODO
   createModoCheckout: async (price, details) => {
-    set({ paymentLoading: true, paymentError: null });
-    try {
-      const response = await axios.post(`${URL}/Pagos/create_modo`, {
-        price: parseFloat(price),
-        details: details,
-      });
-  
-      // Desestructura la respuesta
-      const { qr, deeplink } = response.data;
-  
-      // Agrega el console.log para verificar la respuesta
-      console.log("Respuesta de MODO:", response.data); // Asegúrate de que esto muestra correctamente los datos
-      console.log("QR recibido en el frontend:", qr);
-  
-      // Guarda los datos en el estado de Zustand
-      set({
-        paymentLoading: false,
-        modoQRCodeURL: qr, // El código QR en formato de cadena
-        modoDeeplink: deeplink, // El deep link
-      });
-  
-      return { qr, deeplink };
-    } catch (error) {
-      set({
-        paymentError: 'Hubo un problema al crear el checkout de MODO.',
-        paymentLoading: false,
-      });
-      throw error;
-    }
-  },
-  // Acción para incrementar la cantidad de un producto
-  incrementQuantity: (id) => set((state) => ({
-    products: state.products.map(product =>
-      product.id === id ? { ...product, quantity: product.quantity + 1 } : product
-    )
-  })),
+  set({ paymentLoading: true, paymentError: null });
+  try {
+    const response = await axios.post(`${URL}/Pagos/create_modo`, {
+      price: parseFloat(price),
+      details: details,
+    });
 
-  // Acción para decrementar la cantidad de un producto
-  decrementQuantity: (id) => set((state) => ({
-    products: state.products.map(product =>
-      product.id === id && product.quantity > 0
-        ? { ...product, quantity: product.quantity - 1 } : product
-    )
-  })),
+    // Desestructura la respuesta
+    const { qr, deeplink } = response.data;
 
-  // Acción para reiniciar todos los productos
-  resetProducts: () => set((state) => ({
-    products: state.products.map(product => ({ ...product, quantity: 0 }))
-  })),
+    // Agrega el console.log para verificar la respuesta
+    console.log("Respuesta de MODO:", response.data); // Asegúrate de que esto muestra correctamente los datos
+    console.log("QR recibido en el frontend:", qr);
+
+    // Guarda los datos en el estado de Zustand
+    set({
+      paymentLoading: false,
+      modoQRCodeURL: qr, // El código QR en formato de cadena
+      modoDeeplink: deeplink, // El deep link
+    });
+
+    return { qr, deeplink };
+  } catch (error) {
+    set({
+      paymentError: 'Hubo un problema al crear el checkout de MODO.',
+      paymentLoading: false,
+    });
+    throw error;
+  }
+},
 
   // Guardar detalles de pago
-  savePaymentDetails: async (paymentDetails) => {
-    set({ paymentLoading: true, paymentError: null });
-    try {
-      console.log('Detalles de pago a enviar:', paymentDetails);
-
-      const response = await axios.post(`${URL}/Pagos/save_payment_details`, paymentDetails);
-
-      console.log('Detalles de pago guardados:', response.data);
-      set({ paymentLoading: false });
-    } catch (error) {
-      console.error('Error al guardar los detalles del pago:', error);
-      set({
-        paymentError: 'Hubo un problema al guardar los detalles del pago.',
-        paymentLoading: false,
-      });
-    }
-  },
-
-  // Registrar un pago
-  registerPayment: async (paymentDetails) => {
-    set({ paymentLoading: true, paymentError: null });
-    try {
-      console.log('Detalles de pago a registrar:', paymentDetails);
-
-      const response = await axios.post(`${URL}Pagos/register_payment`, paymentDetails);
-
-      console.log('Pago registrado:', response.data);
-      set({ paymentLoading: false });
-    } catch (error) {
-      console.error('Error al registrar el pago:', error);
-      set({
-        paymentError: 'Hubo un problema al registrar el pago.',
-        paymentLoading: false,
-      });
-    }
-  },
-
-  // Manejar webhook de MercadoPago
-  handleWebhook: async (webhookData) => {
-    set({ paymentLoading: true, paymentError: null });
-    try {
-      console.log('Datos del webhook:', webhookData);
-
-      const response = await axios.post(`${URL}/Pagos/webhook`, webhookData);
 
 
-      console.log('Webhook procesado:', response.data);
-      set({ paymentLoading: false });
-    } catch (error) {
-      console.error('Error al procesar el webhook:', error);
-      set({
-        paymentError: 'Hubo un problema al procesar el webhook.',
-        paymentLoading: false,
-      });
-    }
-  },
+
+  // Manejar webhook de MODO
+
 }));
 
 export default usePaymentStore;
