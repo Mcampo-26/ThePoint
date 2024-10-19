@@ -315,7 +315,7 @@ export const Home = () => {
                   alt="Mercado Pago"
                   className="w-6 h-6"
                 />
-                <span>Mercado Pago</span>
+              
               </button>
               <button
                 className={`${
@@ -326,7 +326,7 @@ export const Home = () => {
                 onClick={() => setSelectedPaymentMethod("modo")}
               >
                 <img src="/assets/modo.png" alt="MODO" className="w-6 h-6" />
-                <span>MODO</span>
+              
               </button>
             </div>
 
