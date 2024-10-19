@@ -305,11 +305,11 @@ export const Home = () => {
 
             <div className="flex justify-center space-x-8 mb-6">
               <button
-                className={`flex justify-center items-center w-32 h-16 rounded-md shadow-md border border-gray-300 transition-shadow duration-200 ${
+                className={`flex justify-center items-center w-36 h-16 rounded-md shadow-md border border-gray-300 transition-shadow duration-200 ${
                   selectedPaymentMethod === "mercadoPago"
                     ? "shadow-lg border-blue-600 bg-gray-100"
                     : "hover:shadow-lg hover:border-blue-400"
-                } mr-10`}
+                } mr-8`}
                 onClick={() => setSelectedPaymentMethod("mercadoPago")}
               >
                 <img
@@ -323,7 +323,7 @@ export const Home = () => {
                   selectedPaymentMethod === "modo"
                     ? "shadow-lg border-blue-500 bg-gray-100"
                     : "hover:shadow-lg hover:border-blue-300"
-                } ml-16`}
+                } ml-10`}
                 onClick={() => setSelectedPaymentMethod("modo")}
               >
                 <img src={modoLogo} alt="MODO" className="w-24 h-6" />
