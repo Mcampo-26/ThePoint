@@ -6,8 +6,8 @@ import { useProductStore } from "../store/useProductStore";
 import ReactQRCode from "react-qr-code";
 import Swal from "sweetalert2";
 import io from "socket.io-client";
-import mercadopagoLogo from '../assets/mercadopago.png';
-import modoLogo from '../assets/modo.png';
+import mercadopagoLogo from "../assets/mercadopago.png";
+import modoLogo from "../assets/modo.png";
 
 // URL de tu servidor WebSocket en Heroku
 const socket = io("https://thepointdev-acda6df575b0.herokuapp.com", {
@@ -304,24 +304,31 @@ export const Home = () => {
             </button>
 
             <div className="flex justify-center space-x-4 mb-6">
-  <button
-    className={`${
-      selectedPaymentMethod === "mercadoPago" ? "bg-blue-500" : "bg-gray-300"
-    } flex justify-center items-center w-40 h-20 rounded-md shadow-md border border-gray-300`}
-    onClick={() => setSelectedPaymentMethod("mercadoPago")}
-  >
-    <img src={mercadopagoLogo} alt="Mercado Pago" className="w-32 h-auto" />
-  </button>
-  <button
-    className={`${
-      selectedPaymentMethod === "modo" ? "bg-blue-500" : "bg-gray-300"
-    } flex justify-center items-center w-40 h-20 rounded-md shadow-md border border-gray-300`}
-    onClick={() => setSelectedPaymentMethod("modo")}
-  >
-    <img src={modoLogo} alt="MODO" className="w-24 h-auto" />
-  </button>
-</div>
-
+              <button
+                className={`${
+                  selectedPaymentMethod === "mercadoPago"
+                    ? "bg-blue-500"
+                    : "bg-gray-300"
+                } flex justify-center items-center w-40 h-20 rounded-md shadow-md border border-gray-300`}
+                onClick={() => setSelectedPaymentMethod("mercadoPago")}
+              >
+                <img
+                  src={mercadopagoLogo}
+                  alt="Mercado Pago"
+                  className="w-32 h-13"
+                />
+              </button>
+              <button
+                className={`${
+                  selectedPaymentMethod === "modo"
+                    ? "bg-blue-500"
+                    : "bg-gray-300"
+                } flex justify-center items-center w-40 h-20 rounded-md shadow-md border border-gray-300`}
+                onClick={() => setSelectedPaymentMethod("modo")}
+              >
+                <img src={modoLogo} alt="MODO" className="w-28 h-13" />
+              </button>
+            </div>
 
             <div className="flex justify-center items-center">
               {selectedPaymentMethod === "mercadoPago" && paymentLink && (
