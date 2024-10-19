@@ -7,7 +7,6 @@ import ReactQRCode from "react-qr-code";
 import Swal from "sweetalert2";
 import io from "socket.io-client";
 
-
 // URL de tu servidor WebSocket en Heroku
 const socket = io("https://thepointdev-acda6df575b0.herokuapp.com", {
   transports: ["websocket"],
@@ -16,15 +15,18 @@ const socket = io("https://thepointdev-acda6df575b0.herokuapp.com", {
 });
 
 export const Home = () => {
-  const { createPaymentLink,createModoCheckout, paymentLink, paymentLoading } = usePaymentStore();
-  const { products, fetchProducts, needsUpdate, setNeedsUpdate } = useProductStore();
+  const { createPaymentLink, createModoCheckout, paymentLink, paymentLoading } =
+    usePaymentStore();
+  const { products, fetchProducts, needsUpdate, setNeedsUpdate } =
+    useProductStore();
   const [modoQR, setModoQR] = useState(null); // Estado para almacenar el QR de MODO
   const [modoDeeplink, setModoDeeplink] = useState(null); // Estado para almacenar el deeplink de MODO
   const [localProducts, setLocalProducts] = useState([]); // Para gestionar cantidades de productos seleccionados
   const [showQR, setShowQR] = useState(false); // Estado para mostrar/ocultar el QR
   const [paymentStatus, setPaymentStatus] = useState(null); // Estado del pago
   const [paymentId, setPaymentId] = useState(null); // ID del pago
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("mercadoPago"); // Estado para seleccionar el método de pago
+  const [selectedPaymentMethod, setSelectedPaymentMethod] =
+    useState("mercadoPago"); // Estado para seleccionar el método de pago
 
   useEffect(() => {
     fetchProducts();
@@ -70,8 +72,11 @@ export const Home = () => {
 
   // Función para manejar el resultado del pago
   const handlePaymentResult = async (status, paymentId) => {
-    const storedProducts = JSON.parse(localStorage.getItem("selectedProducts")) || [];
-    const selectedProducts = storedProducts.filter((product) => product.quantity > 0);
+    const storedProducts =
+      JSON.parse(localStorage.getItem("selectedProducts")) || [];
+    const selectedProducts = storedProducts.filter(
+      (product) => product.quantity > 0
+    );
 
     setPaymentStatus(status);
     setPaymentId(paymentId);
@@ -106,7 +111,9 @@ export const Home = () => {
   const handlePayment = async () => {
     const productName = "La Previa";
     const socketId = socket.id; // Obtener el ID del socket conectado
-    const selectedProducts = localProducts.filter((product) => product.quantity > 0);
+    const selectedProducts = localProducts.filter(
+      (product) => product.quantity > 0
+    );
     const totalAmount = selectedProducts.reduce(
       (total, product) => total + product.quantity * product.price,
       0
@@ -164,7 +171,9 @@ export const Home = () => {
     );
   };
 
-  const selectedProducts = localProducts.filter((product) => product.quantity > 0);
+  const selectedProducts = localProducts.filter(
+    (product) => product.quantity > 0
+  );
 
   const totalAmount = selectedProducts.reduce(
     (total, product) => total + product.quantity * product.price,
@@ -178,8 +187,12 @@ export const Home = () => {
           Productos
         </h1>
       </div>
-  
-      <div className={`flex flex-col lg:flex-row w-full -mt-10 ${showQR ? "blur-md" : ""}`}>
+
+      <div
+        className={`flex flex-col lg:flex-row w-full -mt-10 ${
+          showQR ? "blur-md" : ""
+        }`}
+      >
         <div className="flex-1 grid grid-cols-1 gap-6 px-4 md:px-8 mt-20">
           {localProducts.map((product) => (
             <div
@@ -203,7 +216,9 @@ export const Home = () => {
                 >
                   -
                 </button>
-                <span className="text-lg md:text-xl font-bold">{product.quantity}</span>
+                <span className="text-lg md:text-xl font-bold">
+                  {product.quantity}
+                </span>
                 <button
                   className="bg-green-500 text-white px-2 md:px-4 py-1 md:py-2 rounded"
                   onClick={() => incrementQuantity(product._id)}
@@ -214,7 +229,7 @@ export const Home = () => {
             </div>
           ))}
         </div>
-  
+
         <div className="w-full lg:w-1/3 mt-10 lg:mt-0 lg:ml-8 lg:sticky lg:top-4">
           <h2 className="text-xl md:text-2xl font-semibold mb-4 text-center text-gray-800">
             Resumen de compra
@@ -223,12 +238,18 @@ export const Home = () => {
             <div className="bg-white shadow-md rounded-lg p-4">
               <ul className="divide-y divide-gray-200">
                 {selectedProducts.map((product) => (
-                  <li key={product._id} className="flex justify-between items-center py-4">
+                  <li
+                    key={product._id}
+                    className="flex justify-between items-center py-4"
+                  >
                     <div className="flex flex-col sm:flex-row items-center space-x-2 md:space-x-4">
                       <span className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm">
-                        {product.quantity} {product.quantity > 1 ? "unidades" : "unidad"}
+                        {product.quantity}{" "}
+                        {product.quantity > 1 ? "unidades" : "unidad"}
                       </span>
-                      <span className="font-medium text-gray-700">{product.name}</span>
+                      <span className="font-medium text-gray-700">
+                        {product.name}
+                      </span>
                     </div>
                     <button
                       className="text-red-500 hover:text-red-700 font-medium"
@@ -239,7 +260,7 @@ export const Home = () => {
                   </li>
                 ))}
               </ul>
-  
+
               <div className="mt-4 border-t pt-4 flex justify-between font-bold">
                 <span>Total de productos:</span>
                 <span>{selectedProducts.length}</span>
@@ -250,22 +271,26 @@ export const Home = () => {
               </div>
             </div>
           ) : (
-            <p className="text-gray-500 text-center">No has seleccionado ningún producto.</p>
+            <p className="text-gray-500 text-center">
+              No has seleccionado ningún producto.
+            </p>
           )}
-  
+
           {selectedProducts.length > 0 && (
             <div className="mt-6">
               <button
                 className="bg-blue-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg shadow-lg hover:bg-blue-700 transition duration-300 w-full"
                 onClick={handlePayment}
               >
-                {paymentLoading ? "Generando enlace..." : `Comprar por $${totalAmount}`}
+                {paymentLoading
+                  ? "Generando enlace..."
+                  : `Comprar por $${totalAmount}`}
               </button>
             </div>
           )}
         </div>
       </div>
-  
+
       {showQR && (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50">
           <div className="relative bg-white p-8 rounded-lg shadow-lg w-11/12 sm:w-4/5 max-w-lg h-auto">
@@ -275,39 +300,57 @@ export const Home = () => {
             >
               <FontAwesomeIcon icon={faTimes} size="xl" />
             </button>
-  
+
             <div className="flex justify-center space-x-4 mb-6">
               <button
                 className={`${
-                  selectedPaymentMethod === "mercadoPago" ? "bg-blue-500" : "bg-gray-300"
-                } text-white px-4 py-2 rounded-lg`}
+                  selectedPaymentMethod === "mercadoPago"
+                    ? "bg-blue-500"
+                    : "bg-gray-300"
+                } flex items-center space-x-2 text-white px-4 py-2 rounded-lg`}
                 onClick={() => setSelectedPaymentMethod("mercadoPago")}
               >
-                Mercado Pago
+                <img
+                  src="/assets/mercadopago.png"
+                  alt="Mercado Pago"
+                  className="w-6 h-6"
+                />
+                <span>Mercado Pago</span>
               </button>
               <button
                 className={`${
-                  selectedPaymentMethod === "modo" ? "bg-blue-500" : "bg-gray-300"
-                } text-white px-4 py-2 rounded-lg`}
+                  selectedPaymentMethod === "modo"
+                    ? "bg-blue-500"
+                    : "bg-gray-300"
+                } flex items-center space-x-2 text-white px-4 py-2 rounded-lg`}
                 onClick={() => setSelectedPaymentMethod("modo")}
               >
-                MODO
+                <img src="/assets/modo.png" alt="MODO" className="w-6 h-6" />
+                <span>MODO</span>
               </button>
             </div>
-  
+
             <div className="flex justify-center items-center">
               {selectedPaymentMethod === "mercadoPago" && paymentLink && (
-                <ReactQRCode value={paymentLink} size={300} className="max-w-full h-auto" />
+                <ReactQRCode
+                  value={paymentLink}
+                  size={300}
+                  className="max-w-full h-auto"
+                />
               )}
-            {selectedPaymentMethod === "modo" && modoQR && (
-  <ReactQRCode value={modoQR} size={300} className="max-w-full h-auto" />
-)}
+              {selectedPaymentMethod === "modo" && modoQR && (
+                <ReactQRCode
+                  value={modoQR}
+                  size={300}
+                  className="max-w-full h-auto"
+                />
+              )}
             </div>
           </div>
         </div>
       )}
     </div>
   );
-  };
+};
 
-  export default Home;
+export default Home;
