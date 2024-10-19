@@ -9,7 +9,7 @@ import io from "socket.io-client";
 
 
 // URL de tu servidor WebSocket en Heroku
-const socket = io("https://thepointback-03939a97aeeb.herokuapp.com", {
+const socket = io("https://thepointdev-acda6df575b0.herokuapp.com", {
   transports: ["websocket"],
   reconnectionAttempts: 5,
   reconnectionDelay: 3000,
