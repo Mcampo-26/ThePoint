@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash, faTimes } from "@fortawesome/free-solid-svg-icons";
@@ -356,4 +354,3 @@ export const Home = () => {
 };
 
 export default Home;
->>>>>>> 8da841a7ca5390d25caa5157c29d19328e836c3c
