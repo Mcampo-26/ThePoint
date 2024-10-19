@@ -311,14 +311,14 @@ export const Home = () => {
                 <img
                   src={mercadopagoLogo}
                   alt="Mercado Pago"
-                  className="w-32 h-10"
+                  className="w-32 h-8"
                 />
               </button>
               <button
                 className="flex justify-center items-center w-40 h-20 rounded-md shadow-md border border-gray-300"
                 onClick={() => setSelectedPaymentMethod("modo")}
               >
-                <img src={modoLogo} alt="MODO" className="w-28 h-10" />
+                <img src={modoLogo} alt="MODO" className="w-28 h-8" />
               </button>
             </div>
 
