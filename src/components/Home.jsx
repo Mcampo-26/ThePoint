@@ -305,7 +305,7 @@ export const Home = () => {
 
             <div className="flex justify-center space-x-4 mb-6">
               <button
-                className="flex justify-center items-center w-25 h-15 rounded-md shadow-md border border-gray-300"
+                className="flex justify-center items-center w-30 h-15 rounded-md shadow-md border border-gray-300"
                 onClick={() => setSelectedPaymentMethod("mercadoPago")}
               >
                 <img
@@ -318,7 +318,7 @@ export const Home = () => {
                 className="flex justify-center items-center w-25 h-15 rounded-md shadow-md border border-gray-300"
                 onClick={() => setSelectedPaymentMethod("modo")}
               >
-                <img src={modoLogo} alt="MODO" className="w-26 h-6" />
+                <img src={modoLogo} alt="MODO" className="w-23 h-6" />
               </button>
             </div>
 
