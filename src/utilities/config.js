@@ -1,6 +1,6 @@
 
-
-export const URL = ' https://thepointback-03939a97aeeb.herokuapp.com'
+export const URL = 'https://thepointdev-acda6df575b0.herokuapp.com'
+//export const URL = ' https://thepointback-03939a97aeeb.herokuapp.com'
 
 
 //export const URL = "http://localhost:8080"
