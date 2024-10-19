@@ -6,6 +6,8 @@ import { useProductStore } from "../store/useProductStore";
 import ReactQRCode from "react-qr-code";
 import Swal from "sweetalert2";
 import io from "socket.io-client";
+import mercadopagoLogo from '../assets/mercadopago.png';
+import modoLogo from '../assets/modo.png';
 
 // URL de tu servidor WebSocket en Heroku
 const socket = io("https://thepointdev-acda6df575b0.herokuapp.com", {
