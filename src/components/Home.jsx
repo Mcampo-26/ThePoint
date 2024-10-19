@@ -307,26 +307,24 @@ export const Home = () => {
                   selectedPaymentMethod === "mercadoPago"
                     ? "bg-blue-500"
                     : "bg-gray-300"
-                } flex items-center space-x-2 text-white px-4 py-2 rounded-lg`}
+                } flex justify-center items-center w-12 h-12 rounded-full`}
                 onClick={() => setSelectedPaymentMethod("mercadoPago")}
               >
                 <img
-                  src="/assets/mercadopago.png"
+                  src={mercadopagoLogo}
                   alt="Mercado Pago"
-                  className="w-6 h-6"
+                  className="w-10 h-10"
                 />
-                <span>Mercado Pago</span>
               </button>
               <button
                 className={`${
                   selectedPaymentMethod === "modo"
                     ? "bg-blue-500"
                     : "bg-gray-300"
-                } flex items-center space-x-2 text-white px-4 py-2 rounded-lg`}
+                } flex justify-center items-center w-12 h-12 rounded-full`}
                 onClick={() => setSelectedPaymentMethod("modo")}
               >
-                <img src="/assets/modo.png" alt="MODO" className="w-6 h-6" />
-                <span>MODO</span>
+                <img src={modoLogo} alt="MODO" className="w-10 h-10" />
               </button>
             </div>
 
