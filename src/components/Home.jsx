@@ -303,10 +303,10 @@ export const Home = () => {
               <FontAwesomeIcon icon={faTimes} size="xl" />
             </button>
 
-            <div className="flex justify-center space-x-4 mb-6">
+            <div className="flex justify-center space-x-6 mb-6">
   <button
     className={`flex justify-center items-center w-30 h-15 rounded-md shadow-md border border-gray-300 transition-shadow duration-200 ${
-      selectedPaymentMethod === "mercadoPago" ? "shadow-lg border-blue-500" : "hover:shadow-lg hover:border-blue-300"
+      selectedPaymentMethod === "mercadoPago" ? "shadow-lg border-blue-600" : "hover:shadow-lg hover:border-blue-400"
     }`}
     onClick={() => setSelectedPaymentMethod("mercadoPago")}
   >
