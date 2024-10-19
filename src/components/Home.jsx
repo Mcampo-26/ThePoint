@@ -303,10 +303,12 @@ export const Home = () => {
               <FontAwesomeIcon icon={faTimes} size="xl" />
             </button>
 
-            <div className="flex justify-center space-x-6 mb-6">
+            <div className="flex justify-center space-x-8 mb-6">
   <button
     className={`flex justify-center items-center w-30 h-15 rounded-md shadow-md border border-gray-300 transition-shadow duration-200 ${
-      selectedPaymentMethod === "mercadoPago" ? "shadow-lg border-blue-600" : "hover:shadow-lg hover:border-blue-400"
+      selectedPaymentMethod === "mercadoPago"
+        ? "shadow-lg border-blue-600 bg-gray-100" // Efecto cuando el botón está seleccionado
+        : "hover:shadow-lg hover:border-blue-400"  // Efecto hover cuando no está seleccionado
     }`}
     onClick={() => setSelectedPaymentMethod("mercadoPago")}
   >
@@ -318,7 +320,9 @@ export const Home = () => {
   </button>
   <button
     className={`flex justify-center items-center w-25 h-15 rounded-md shadow-md border border-gray-300 transition-shadow duration-200 ${
-      selectedPaymentMethod === "modo" ? "shadow-lg border-blue-500" : "hover:shadow-lg hover:border-blue-300"
+      selectedPaymentMethod === "modo"
+        ? "shadow-lg border-blue-500 bg-gray-100" // Efecto cuando el botón está seleccionado
+        : "hover:shadow-lg hover:border-blue-300"  // Efecto hover cuando no está seleccionado
     }`}
     onClick={() => setSelectedPaymentMethod("modo")}
   >
