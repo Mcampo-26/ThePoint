@@ -309,7 +309,7 @@ export const Home = () => {
                   selectedPaymentMethod === "mercadoPago"
                     ? "bg-blue-500"
                     : "bg-gray-300"
-                } flex justify-center items-center w-12 h-12 rounded-full`}
+                } flex justify-center items-center w-24 h-12 rounded-full`}
                 onClick={() => setSelectedPaymentMethod("mercadoPago")}
               >
                 <img
@@ -323,7 +323,7 @@ export const Home = () => {
                   selectedPaymentMethod === "modo"
                     ? "bg-blue-500"
                     : "bg-gray-300"
-                } flex justify-center items-center w-12 h-12 rounded-full`}
+                } flex justify-center items-center w-24 h-12 rounded-full`}
                 onClick={() => setSelectedPaymentMethod("modo")}
               >
                 <img src={modoLogo} alt="MODO" className="w-10 h-10" />
