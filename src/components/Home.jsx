@@ -305,7 +305,7 @@ export const Home = () => {
 
             <div className="flex justify-center space-x-8 mb-6">
               <button
-                className={`flex justify-center items-center w-45  h-22 rounded-md shadow-md border border-gray-300 transition-shadow duration-200 ${
+                className={`flex justify-center items-center w-50 h-26 rounded-md shadow-md border border-gray-300 transition-shadow duration-200 ${
                   selectedPaymentMethod === "mercadoPago"
                     ? "shadow-lg border-blue-600 bg-blue-100"
                     : "hover:shadow-lg hover:border-green-100"
@@ -315,11 +315,11 @@ export const Home = () => {
                 <img
                   src={mercadopagoLogo}
                   alt="Mercado Pago"
-                  className="w-27 h-7"
+                  className="w-25 h-7"
                 />
               </button>
               <button
-                className={`flex justify-center items-center w-32 h-17 rounded-md shadow-md border border-gray-300 transition-shadow duration-200 ${
+                className={`flex justify-center items-center w-40 h-20 rounded-md shadow-md border border-gray-300 transition-shadow duration-200 ${
                   selectedPaymentMethod === "modo"
                     ? "shadow-lg border-blue-500 bg-blue-100"
                     : "hover:shadow-lg hover:border-green-100"
