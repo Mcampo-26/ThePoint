@@ -307,18 +307,18 @@ export const Home = () => {
   <button
     className={`${
       selectedPaymentMethod === "mercadoPago" ? "bg-blue-500" : "bg-gray-300"
-    } flex justify-center items-center w-32 h-16 rounded-lg shadow-md border border-gray-300`}
+    } flex justify-center items-center w-40 h-20 rounded-md shadow-md border border-gray-300`}
     onClick={() => setSelectedPaymentMethod("mercadoPago")}
   >
-    <img src={mercadopagoLogo} alt="Mercado Pago" className="w-10 h-10" />
+    <img src={mercadopagoLogo} alt="Mercado Pago" className="w-32 h-auto" />
   </button>
   <button
     className={`${
       selectedPaymentMethod === "modo" ? "bg-blue-500" : "bg-gray-300"
-    } flex justify-center items-center w-32 h-16 rounded-lg shadow-md border border-gray-300`}
+    } flex justify-center items-center w-40 h-20 rounded-md shadow-md border border-gray-300`}
     onClick={() => setSelectedPaymentMethod("modo")}
   >
-    <img src={modoLogo} alt="MODO" className="w-10 h-10" />
+    <img src={modoLogo} alt="MODO" className="w-24 h-auto" />
   </button>
 </div>
 
