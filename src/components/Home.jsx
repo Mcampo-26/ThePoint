@@ -303,24 +303,29 @@ export const Home = () => {
               <FontAwesomeIcon icon={faTimes} size="xl" />
             </button>
 
-            <div className="flex justify-center space-x-4 mb-6">
-              <button
-                className="flex justify-center items-center w-30 h-15 rounded-md shadow-md border border-gray-300"
-                onClick={() => setSelectedPaymentMethod("mercadoPago")}
-              >
-                <img
-                  src={mercadopagoLogo}
-                  alt="Mercado Pago"
-                  className="w-33 h-8"
-                />
-              </button>
-              <button
-                className="flex justify-center items-center w-25 h-15 rounded-md shadow-md border border-gray-300"
-                onClick={() => setSelectedPaymentMethod("modo")}
-              >
-                <img src={modoLogo} alt="MODO" className="w-23 h-6" />
-              </button>
-            </div>
+            <div className="flex justify-center space-x-8 mb-6">  {/* Aumentamos el espacio entre botones */}
+  <button
+    className={`flex justify-center items-center w-36 h-16 rounded-md shadow-md border border-gray-300 transition-transform duration-200 ${
+      selectedPaymentMethod === "mercadoPago" ? "shadow-lg bg-gray-100 blur-sm" : ""
+    }`}
+    onClick={() => setSelectedPaymentMethod("mercadoPago")}
+  >
+    <img
+      src={mercadopagoLogo}
+      alt="Mercado Pago"
+      className="h-12 w-auto"
+    />
+  </button>
+  <button
+    className={`flex justify-center items-center w-36 h-16 rounded-md shadow-md border border-gray-300 transition-transform duration-200 ${
+      selectedPaymentMethod === "modo" ? "shadow-lg bg-gray-100 blur-sm" : ""
+    }`}
+    onClick={() => setSelectedPaymentMethod("modo")}
+  >
+    <img src={modoLogo} alt="MODO" className="h-12 w-auto" />
+  </button>
+</div>
+
 
             <div className="flex justify-center items-center">
               {selectedPaymentMethod === "mercadoPago" && paymentLink && (
