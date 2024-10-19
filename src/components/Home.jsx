@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash, faTimes } from "@fortawesome/free-solid-svg-icons";
-import { usePaymentStore } from "../store/usePaymentStore"; // Asegúrate de que usePaymentStore esté correctamente importado
+import { usePaymentStore } from "../store/usePaymentStore";
 import { useProductStore } from "../store/useProductStore";
+import ReactQRCode from "react-qr-code";
 import Swal from "sweetalert2";
 import io from "socket.io-client";
+
 
 // URL de tu servidor WebSocket en Heroku
 const socket = io("https://thepointback-03939a97aeeb.herokuapp.com", {
@@ -13,14 +15,16 @@ const socket = io("https://thepointback-03939a97aeeb.herokuapp.com", {
   reconnectionDelay: 3000,
 });
 
-const Home = () => {
-  // Cambia createPaymentLink a createDynamicQR
-  const { createDynamicQR, paymentLink, qrCodeURL, paymentLoading } = usePaymentStore();
+export const Home = () => {
+  const { createPaymentLink,createModoCheckout, paymentLink, paymentLoading } = usePaymentStore();
   const { products, fetchProducts, needsUpdate, setNeedsUpdate } = useProductStore();
+  const [modoQR, setModoQR] = useState(null); // Estado para almacenar el QR de MODO
+  const [modoDeeplink, setModoDeeplink] = useState(null); // Estado para almacenar el deeplink de MODO
   const [localProducts, setLocalProducts] = useState([]); // Para gestionar cantidades de productos seleccionados
   const [showQR, setShowQR] = useState(false); // Estado para mostrar/ocultar el QR
   const [paymentStatus, setPaymentStatus] = useState(null); // Estado del pago
   const [paymentId, setPaymentId] = useState(null); // ID del pago
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("mercadoPago"); // Estado para seleccionar el método de pago
 
   useEffect(() => {
     fetchProducts();
@@ -82,7 +86,6 @@ const Home = () => {
       });
       handleCloseQR();
       setTimeout(() => {
-        printTickets(selectedProducts);
         window.location.reload();
       }, 100);
     } else if (status === "rejected") {
@@ -96,52 +99,10 @@ const Home = () => {
     }
   };
 
-  const printTickets = (selectedProducts) => {
-    let ticketContent = selectedProducts
-      .map((product) =>
-        Array.from({ length: product.quantity })
-          .map(
-            () => `
-              <div class="ticket-container">
-                <h2 class="ticket-title">1x</h2>
-                <p class="ticket-item">${product.name}</p>
-                <h2 class="ticket-footer">Precio: ${product.price}</h2>
-              </div>`
-          )
-          .join("")
-      )
-      .join("");
-
-    const printWindow = window.open("", "", "width=500,height=500");
-    if (!printWindow) {
-      alert("Error: El navegador bloqueó la ventana de impresión. Permita las ventanas emergentes.");
-      return;
-    }
-
-    printWindow.document.write(`
-      <html>
-        <head>
-          <style>
-            body { text-align: center; margin: 0; padding: 0; height: auto; }
-            .ticket-container { width: 100%; height: auto; }
-            .ticket-title { font-size: 20px; margin-top: 1px; }
-            .ticket-item { font-size: 55px; margin-top: -15px; }
-            .ticket-footer { font-size: 10px; margin-top: -20px; }
-          </style>
-        </head>
-        <body onload="window.print();window.close()">
-          ${ticketContent}
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
-  };
-
   const handleCloseQR = () => {
     setShowQR(false);
   };
 
-  // Cambia el nombre de la función para llamar a createDynamicQR
   const handlePayment = async () => {
     const productName = "La Previa";
     const socketId = socket.id; // Obtener el ID del socket conectado
@@ -150,12 +111,28 @@ const Home = () => {
       (total, product) => total + product.quantity * product.price,
       0
     );
-  
+
+    // Crear un array con los detalles del producto para MODO
+    const details = selectedProducts.map((product) => ({
+      productName: product.name,
+      quantity: product.quantity,
+      price: product.price,
+    }));
+
     try {
-      await createDynamicQR(productName, totalAmount, selectedProducts, socketId); // Usar createDynamicQR en lugar de createPaymentLink
+      // Crear QR tanto para Mercado Pago como para MODO
+      const [mercadoPagoResponse, modoResponse] = await Promise.all([
+        createPaymentLink(productName, totalAmount, selectedProducts, socketId),
+        createModoCheckout(totalAmount, details),
+      ]);
+
+      // Setear el link de Mercado Pago y los detalles de MODO
+      setModoQR(modoResponse.qr);
+      setModoDeeplink(modoResponse.deeplink);
+
       setShowQR(true);
     } catch (error) {
-      console.error("Error al generar el QR dinámico:", error);
+      console.error("Error al generar los QRs:", error);
     }
   };
 
@@ -187,19 +164,10 @@ const Home = () => {
     );
   };
 
-  const formatUnits = (quantity) => {
-    return quantity === 1 ? "unidad" : "unidades";
-  };
-
   const selectedProducts = localProducts.filter((product) => product.quantity > 0);
 
   const totalAmount = selectedProducts.reduce(
     (total, product) => total + product.quantity * product.price,
-    0
-  );
-
-  const totalProducts = selectedProducts.reduce(
-    (total, product) => total + product.quantity,
     0
   );
 
@@ -210,7 +178,7 @@ const Home = () => {
           Productos
         </h1>
       </div>
-
+  
       <div className={`flex flex-col lg:flex-row w-full -mt-10 ${showQR ? "blur-md" : ""}`}>
         <div className="flex-1 grid grid-cols-1 gap-6 px-4 md:px-8 mt-20">
           {localProducts.map((product) => (
@@ -246,7 +214,7 @@ const Home = () => {
             </div>
           ))}
         </div>
-
+  
         <div className="w-full lg:w-1/3 mt-10 lg:mt-0 lg:ml-8 lg:sticky lg:top-4">
           <h2 className="text-xl md:text-2xl font-semibold mb-4 text-center text-gray-800">
             Resumen de compra
@@ -258,7 +226,7 @@ const Home = () => {
                   <li key={product._id} className="flex justify-between items-center py-4">
                     <div className="flex flex-col sm:flex-row items-center space-x-2 md:space-x-4">
                       <span className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm">
-                        {product.quantity} {formatUnits(product.quantity)}
+                        {product.quantity} {product.quantity > 1 ? "unidades" : "unidad"}
                       </span>
                       <span className="font-medium text-gray-700">{product.name}</span>
                     </div>
@@ -271,12 +239,10 @@ const Home = () => {
                   </li>
                 ))}
               </ul>
-
+  
               <div className="mt-4 border-t pt-4 flex justify-between font-bold">
                 <span>Total de productos:</span>
-                <span>
-                  {totalProducts} {formatUnits(totalProducts)}
-                </span>
+                <span>{selectedProducts.length}</span>
               </div>
               <div className="mt-4 border-t pt-4 flex justify-between font-bold">
                 <span>Total a pagar:</span>
@@ -286,7 +252,7 @@ const Home = () => {
           ) : (
             <p className="text-gray-500 text-center">No has seleccionado ningún producto.</p>
           )}
-
+  
           {selectedProducts.length > 0 && (
             <div className="mt-6">
               <button
@@ -299,8 +265,8 @@ const Home = () => {
           )}
         </div>
       </div>
-
-      {showQR && qrCodeURL && (
+  
+      {showQR && (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50">
           <div className="relative bg-white p-8 rounded-lg shadow-lg w-11/12 sm:w-4/5 max-w-lg h-auto">
             <button
@@ -309,15 +275,39 @@ const Home = () => {
             >
               <FontAwesomeIcon icon={faTimes} size="xl" />
             </button>
-
+  
+            <div className="flex justify-center space-x-4 mb-6">
+              <button
+                className={`${
+                  selectedPaymentMethod === "mercadoPago" ? "bg-blue-500" : "bg-gray-300"
+                } text-white px-4 py-2 rounded-lg`}
+                onClick={() => setSelectedPaymentMethod("mercadoPago")}
+              >
+                Mercado Pago
+              </button>
+              <button
+                className={`${
+                  selectedPaymentMethod === "modo" ? "bg-blue-500" : "bg-gray-300"
+                } text-white px-4 py-2 rounded-lg`}
+                onClick={() => setSelectedPaymentMethod("modo")}
+              >
+                MODO
+              </button>
+            </div>
+  
             <div className="flex justify-center items-center">
-              <img src={qrCodeURL} alt="Código QR para pago" className="max-w-full h-auto" />
+              {selectedPaymentMethod === "mercadoPago" && paymentLink && (
+                <ReactQRCode value={paymentLink} size={300} className="max-w-full h-auto" />
+              )}
+            {selectedPaymentMethod === "modo" && modoQR && (
+  <ReactQRCode value={modoQR} size={300} className="max-w-full h-auto" />
+)}
             </div>
           </div>
         </div>
       )}
     </div>
   );
-};
+  };
 
-export default Home;
+  export default Home;
