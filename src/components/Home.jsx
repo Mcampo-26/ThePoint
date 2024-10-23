@@ -10,7 +10,7 @@ import mercadopagoLogo from "../assets/mercadopago.png";
 import modoLogo from "../assets/modo.png";
 
 // URL de tu servidor WebSocket en Heroku
-const socket = io("https://thepointdev-acda6df575b0.herokuapp.com", {
+const socket = io("https://thepoint.netlify.app", {
   transports: ["websocket"],
   reconnectionAttempts: 5,
   reconnectionDelay: 3000,
