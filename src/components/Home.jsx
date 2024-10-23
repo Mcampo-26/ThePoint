@@ -10,7 +10,7 @@ import mercadopagoLogo from "../assets/mercadopago.png";
 import modoLogo from "../assets/modo.png";
 
 // URL de tu servidor WebSocket en Heroku
-const socket = io(" https://thepointback-03939a97aeeb.herokuapp.com", {
+const socket = io("https://thepointback-03939a97aeeb.herokuapp.com", {
   transports: ["websocket"],
   reconnectionAttempts: 5,
   reconnectionDelay: 3000,
