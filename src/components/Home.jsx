@@ -55,7 +55,7 @@ export const Home = () => {
 
   useEffect(() => {
     socket.on("connect", () => {
-      console.log("Conectado al servidor WebSocket");
+      console.log("Conectado al servidor WebSocket con socket ID:", socket.id);
     });
 
     socket.on("paymentSuccess", ({ status, paymentId }) => {
