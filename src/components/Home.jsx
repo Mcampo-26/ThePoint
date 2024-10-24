@@ -53,24 +53,33 @@ export const Home = () => {
     localStorage.setItem("selectedProducts", JSON.stringify(localProducts));
   }, [localProducts]);
 
-  useEffect(() => {
-    socket.on("connect", () => {
-      console.log("Conectado al servidor WebSocket con socket ID:", socket.id);
-    });
+ useEffect(() => {
+  socket.on("connect", () => {
+    console.log("Conectado al servidor WebSocket con socket ID:", socket.id);
+  });
 
-    socket.on("paymentSuccess", ({ status, paymentId }) => {
-      handlePaymentResult(status, paymentId);
-    });
+  // Manejo de pago exitoso
+  socket.on("paymentSuccess", ({ status, paymentId }) => {
+    handlePaymentResult(status, paymentId);
+  });
 
-    socket.on("disconnect", () => {
-      console.log("Desconectado del servidor WebSocket");
-    });
+  // Manejo de pago rechazado
+  socket.on("paymentFailed", ({ status, paymentId }) => {
+    console.log("Pago rechazado recibido:", status, paymentId);
+    handlePaymentResult(status, paymentId); // Puedes reutilizar esta función para manejar ambos casos o crear una nueva
+  });
 
-    return () => {
-      socket.off("paymentSuccess");
-      socket.disconnect();
-    };
-  }, []);
+  socket.on("disconnect", () => {
+    console.log("Desconectado del servidor WebSocket");
+  });
+
+  return () => {
+    socket.off("paymentSuccess");
+    socket.off("paymentFailed"); // Desconectar el evento paymentFailed también
+    socket.disconnect();
+  };
+}, []);
+
 
   // Función para manejar el resultado del pago
   const handlePaymentResult = async (status, paymentId) => {
