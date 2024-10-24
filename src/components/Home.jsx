@@ -83,38 +83,40 @@ export const Home = () => {
 
   // Función para manejar el resultado del pago
   const handlePaymentResult = async (status, paymentId) => {
-    const storedProducts =
-      JSON.parse(localStorage.getItem("selectedProducts")) || [];
-    const selectedProducts = storedProducts.filter(
-      (product) => product.quantity > 0
-    );
+  const storedProducts =
+    JSON.parse(localStorage.getItem("selectedProducts")) || [];
+  const selectedProducts = storedProducts.filter(
+    (product) => product.quantity > 0
+  );
 
-    setPaymentStatus(status);
-    setPaymentId(paymentId);
+  setPaymentStatus(status);
+  setPaymentId(paymentId);
 
-    if (status === "approved") {
-      await Swal.fire({
-        title: "¡Pago Exitoso!",
-        text: "Gracias por tu compra.",
-        icon: "success",
-        showConfirmButton: false,
-        timer: 2000,
-      });
-      handleCloseQR();
-      setTimeout(() => {
-        window.location.reload();
-      }, 100);
-    } else if (status === "REJECTED") {
-      await Swal.fire({
-        title: "Pago Rechazado",
-        text: "El pago fue rechazado, intente nuevamente...",
-        icon: "error",
-        showConfirmButton: false,
-        timer: 2000,
-        window.location.reload();
-      });
-    }
-  };
+  if (status === "approved") {
+    await Swal.fire({
+      title: "¡Pago Exitoso!",
+      text: "Gracias por tu compra.",
+      icon: "success",
+      showConfirmButton: false,
+      timer: 2000,
+    });
+    handleCloseQR();
+    setTimeout(() => {
+      window.location.reload();
+    }, 100);
+  } else if (status === "REJECTED") {
+    await Swal.fire({
+      title: "Pago Rechazado",
+      text: "El pago fue rechazado, intente nuevamente...",
+      icon: "error",
+      showConfirmButton: false,
+      timer: 2000,
+    });
+    setTimeout(() => {
+      window.location.reload();
+    }, 100); // Aquí moví window.location.reload fuera de Swal.fire
+  }
+};
 
   const handleCloseQR = () => {
     setShowQR(false);
