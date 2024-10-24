@@ -98,10 +98,11 @@ export const Home = () => {
     } else if (status === "REJECTED") {
       await Swal.fire({
         title: "Pago Rechazado",
-        text: "Lamentablemente, el pago fue rechazado.",
+        text: "El pago fue rechazado, intente nuevamente...",
         icon: "error",
         showConfirmButton: false,
         timer: 2000,
+        window.location.reload();
       });
     }
   };
