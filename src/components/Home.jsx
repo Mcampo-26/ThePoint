@@ -82,7 +82,7 @@ export const Home = () => {
 
 
   // Función para manejar el resultado del pago
-  const handlePaymentResult = async (status, paymentId) => {
+ const handlePaymentResult = async (status, paymentId) => {
   const storedProducts =
     JSON.parse(localStorage.getItem("selectedProducts")) || [];
   const selectedProducts = storedProducts.filter(
@@ -104,7 +104,7 @@ export const Home = () => {
     setTimeout(() => {
       window.location.reload();
     }, 100);
-  } else if (status === "REJECTED") {
+  } else if (status === "REJECTED" || status === "rejected") {
     await Swal.fire({
       title: "Pago Rechazado",
       text: "El pago fue rechazado, intente nuevamente...",
@@ -114,7 +114,7 @@ export const Home = () => {
     });
     setTimeout(() => {
       window.location.reload();
-    }, 100); // Aquí moví window.location.reload fuera de Swal.fire
+    }, 100); // Recarga después del Swal
   }
 };
 
