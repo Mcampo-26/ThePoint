@@ -132,7 +132,7 @@ export const Home = () => {
       // Crear QR tanto para Mercado Pago como para MODO
       const [mercadoPagoResponse, modoResponse] = await Promise.all([
         createPaymentLink(productName, totalAmount, selectedProducts, socketId),
-        createModoCheckout(totalAmount, details),
+        createModoCheckout(totalAmount, details,socketId),
       ]);
 
       // Setear el link de Mercado Pago y los detalles de MODO
