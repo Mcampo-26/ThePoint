@@ -5,19 +5,11 @@ import { usePaymentStore } from "../store/usePaymentStore";
 import { useProductStore } from "../store/useProductStore";
 import ReactQRCode from "react-qr-code";
 import Swal from "sweetalert2";
-
+import socket from "../utilities/socket.js";
 import mercadopagoLogo from "../assets/mercadopago.png";
 import modoLogo from "../assets/modo.png";
 
-// URL de tu servidor WebSocket en Heroku
-import io from "socket.io-client";
 
-// Inicia la conexión de WebSocket
-const socket = io("https://thepointback-03939a97aeeb.herokuapp.com", {
-  transports: ["websocket"],
-  reconnectionAttempts: 5,
-  reconnectionDelay: 3000,
-});
 
 const Home = () => {
   const { createPaymentLink, createModoCheckout, paymentLink, paymentLoading } =
