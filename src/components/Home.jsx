@@ -6,7 +6,7 @@ import { useProductStore } from "../store/useProductStore";
 import ReactQRCode from "react-qr-code";
 import Swal from "sweetalert2";
 import io from "socket.io-client";
-import socket from "../utilities/socket.js";
+
 import mercadopagoLogo from "../assets/mercadopago.png";
 import modoLogo from "../assets/modo.png";
 
