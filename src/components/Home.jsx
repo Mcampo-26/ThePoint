@@ -91,6 +91,7 @@ const Home = () => {
   setPaymentId(paymentId);
 
   if (status === "approved" || status === "ACCEPTED") {
+        printTickets(selectedProducts);
     await Swal.fire({
       title: "¡Pago Exitoso!",
       text: "Gracias por tu compra.",
