@@ -120,7 +120,7 @@ const printTickets = (selectedProducts) => {
         .map(
           () => `
             <div class="ticket-container">
-            <div class="ticket-datetime">Fecha y Hora: ${currentDateTime}</div>
+            <div class="ticket-datetime"> ${currentDateTime}</div>
               <h2 class="ticket-title">1x</h2>
               <p class="ticket-item">${product.name}</p>
               <h2 class="ticket-footer">gracias por su compra...</h2>
@@ -146,7 +146,7 @@ const printTickets = (selectedProducts) => {
             .ticket-datetime { font-size: 12px; color: gray; margin-top: 10px; }
           .ticket-title { font-size: 20px; margin-top: 1px; }
           .ticket-item { font-size: 55px; margin-top: -15px; }
-          .ticket-footer { font-size: 10px; margin-top: -20px; }
+          .ticket-footer { font-size: 10px; margin-top: -25px; }
         
         </style>
       </head>
