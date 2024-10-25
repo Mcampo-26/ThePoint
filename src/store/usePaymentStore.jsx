@@ -27,7 +27,7 @@ export const usePaymentStore = create((set) => ({
       const response = await axios.post(`${URL}/Pagos/create_payment_link`, {
         title: productName,
         price: parseFloat(price),
-          
+            socketId: socket.id 
       });
 
       const paymentLink = response.data.paymentLink;
