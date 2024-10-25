@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash, faTimes } from "@fortawesome/free-solid-svg-icons";
@@ -11,20 +12,20 @@ import modoLogo from "../assets/modo.png";
 
 
 
-const Home = () => {
+export const Home = () => {
   const { createPaymentLink, createModoCheckout, paymentLink, paymentLoading } =
     usePaymentStore();
   const { products, fetchProducts, needsUpdate, setNeedsUpdate } =
     useProductStore();
-  const [modoQR, setModoQR] = useState(null);
-   const [modoDeeplink, setModoDeeplink] = useState(null); // Estado
+  const [modoQR, setModoQR] = useState(null); // Estado para almacenar el QR de MODO
+  const [modoDeeplink, setModoDeeplink] = useState(null); // Estado para almacenar el deeplink de MODO
   const [localProducts, setLocalProducts] = useState([]); // Para gestionar cantidades de productos seleccionados
   const [showQR, setShowQR] = useState(false); // Estado para mostrar/ocultar el QR
   const [paymentStatus, setPaymentStatus] = useState(null); // Estado del pago
   const [paymentId, setPaymentId] = useState(null); // ID del pago
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("mercadoPago"); 
+  const [selectedPaymentMethod, setSelectedPaymentMethod] =
+    useState("mercadoPago"); // Estado para seleccionar el método de pago
 
-  // Obtener productos al cargar el componente
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
@@ -36,7 +37,6 @@ const Home = () => {
     }
   }, [needsUpdate, fetchProducts, setNeedsUpdate]);
 
-  // Inicializa los productos en el estado con cantidad 0
   useEffect(() => {
     const initializedProducts = products.map((product) => ({
       ...product,
@@ -45,40 +45,30 @@ const Home = () => {
     setLocalProducts(initializedProducts);
   }, [products]);
 
-  // Almacenar productos seleccionados en localStorage
   useEffect(() => {
     localStorage.setItem("selectedProducts", JSON.stringify(localProducts));
   }, [localProducts]);
 
-  // Maneja el evento WebSocket para recibir el pago exitoso
   useEffect(() => {
-  socket.on("connect", () => {
-    console.log("Conectado al servidor WebSocket con socket ID:", socket.id);
-  });
+    // Solo escucha los eventos sin volver a conectar o desconectar el socket
+    socket.on("paymentSuccess", ({ status, paymentId }) => {
+      handlePaymentResult(status, paymentId);
+    });
 
-  socket.on("paymentSuccess", ({ status, paymentId }) => {
-    handlePaymentResult(status, paymentId);
-  });
+    socket.on("paymentFailed", ({ status, paymentId }) => {
+      handlePaymentResult(status, paymentId);
+    });
 
-  socket.on("paymentFailed", ({ status, paymentId }) => {
-    console.log("Pago rechazado recibido:", status, paymentId);
-    handlePaymentResult(status, paymentId);
-  });
-
-  socket.on("disconnect", () => {
-    console.log("Desconectado del servidor WebSocket");
-  });
-
-  return () => {
-    socket.off("paymentSuccess");
-    socket.off("paymentFailed");
-    socket.disconnect();
-  };
-}, []);
+    return () => {
+      // Desactiva los eventos específicos al desmontar `Home`
+      socket.off("paymentSuccess");
+      socket.off("paymentFailed");
+    };
+  }, []);
 
 
-  // Maneja el resultado del pago
-  const handlePaymentResult = async (status, paymentId) => {
+  // Función para manejar el resultado del pago
+ const handlePaymentResult = async (status, paymentId) => {
   const storedProducts =
     JSON.parse(localStorage.getItem("selectedProducts")) || [];
   const selectedProducts = storedProducts.filter(
@@ -89,7 +79,6 @@ const Home = () => {
   setPaymentId(paymentId);
 
   if (status === "approved" || status === "ACCEPTED") {
-        printTickets(selectedProducts);
     await Swal.fire({
       title: "¡Pago Exitoso!",
       text: "Gracias por tu compra.",
@@ -115,115 +104,11 @@ const Home = () => {
   }
 };
 
-  // Función para imprimir los tickets
-  const printTickets = (selectedProducts) => {
-    if (selectedProducts.length === 0) {
-      console.log("No hay productos seleccionados para imprimir.");
-      return;
-    }
-
-    let ticketContent = selectedProducts
-      .map((product) =>
-        Array.from({ length: product.quantity })
-          .map(
-            () => `
-              <div class="ticket-container">
-                <h2 class="ticket-title">1x</h2>
-                <p class="ticket-item">${product.name}</p>
-                <h2 class="ticket-footer">gracias por su compra...</h2>
-              </div>`
-          )
-          .join("")
-      )
-      .join("");
-
-    const printWindow = window.open("", "", "width=500,height=500");
-    if (!printWindow) {
-      alert("Error: El navegador bloqueó la ventana de impresión. Permita las ventanas emergentes.");
-      return;
-    }
-
-    printWindow.document.write(`
-      <html>
-        <head>
-          <style>
-            body { text-align: center; margin: 0; padding: 0; height: auto; }
-            .ticket-container { width: 100%; height: auto; }
-            .ticket-title { font-size: 20px; margin-top: 1px; }
-            .ticket-item { font-size: 55px; margin-top: -15px; }
-            .ticket-footer { font-size: 10px; margin-top: -20px; }
-          </style>
-        </head>
-        <body onload="window.print();window.close()">
-          ${ticketContent}
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
-  };
-
-  // Función para cerrar el QR
   const handleCloseQR = () => {
     setShowQR(false);
   };
 
-  // Simula un pago exitoso para pruebas
-  const simulatePaymentSuccess = () => {
-    const fakePaymentId = "12345"; // ID de pago simulado
-    const fakeStatus = "approved"; // Estado simulado
-    handlePaymentResult(fakeStatus, fakePaymentId); // Llama a la función que maneja el resultado del pago
-  };
-
-  // Incrementa la cantidad de productos
-  const incrementQuantity = (id) => {
-    setLocalProducts(
-      localProducts.map((product) =>
-        product._id === id
-          ? { ...product, quantity: product.quantity + 1 }
-          : product
-      )
-    );
-  };
-
-  // Decrementa la cantidad de productos
-  const decrementQuantity = (id) => {
-    setLocalProducts(
-      localProducts.map((product) =>
-        product._id === id && product.quantity > 0
-          ? { ...product, quantity: product.quantity - 1 }
-          : product
-      )
-    );
-  };
-
-  // Elimina un producto del carrito
-  const removeProduct = (id) => {
-    setLocalProducts(
-      localProducts.map((product) =>
-        product._id === id ? { ...product, quantity: 0 } : product
-      )
-    );
-  };
-
-  const selectedProducts = localProducts.filter(
-    (product) => product.quantity > 0
-  );
-
-  const totalAmount = selectedProducts.reduce(
-    (total, product) => total + product.quantity * product.price,
-    0
-  );
-
-  const totalProducts = selectedProducts.reduce(
-    (total, product) => total + product.quantity,
-    0
-  );
-
-  const formatUnits = (quantity) => {
-    return quantity === 1 ? "unidad" : "unidades";
-  };
-
-const handlePayment = async () => {
+  const handlePayment = async () => {
     const productName = "La Previa";
     const socketId = socket.id; // Obtener el ID del socket conectado
     const selectedProducts = localProducts.filter(
@@ -258,24 +143,61 @@ const handlePayment = async () => {
     }
   };
 
+  const incrementQuantity = (id) => {
+    setLocalProducts(
+      localProducts.map((product) =>
+        product._id === id
+          ? { ...product, quantity: product.quantity + 1 }
+          : product
+      )
+    );
+  };
+
+  const decrementQuantity = (id) => {
+    setLocalProducts(
+      localProducts.map((product) =>
+        product._id === id && product.quantity > 0
+          ? { ...product, quantity: product.quantity - 1 }
+          : product
+      )
+    );
+  };
+
+  const removeProduct = (id) => {
+    setLocalProducts(
+      localProducts.map((product) =>
+        product._id === id ? { ...product, quantity: 0 } : product
+      )
+    );
+  };
+
+  const selectedProducts = localProducts.filter(
+    (product) => product.quantity > 0
+  );
+
+  const totalAmount = selectedProducts.reduce(
+    (total, product) => total + product.quantity * product.price,
+    0
+  );
+
   return (
-    <div className="relative min-h-screen bg-gray-100 flex flex-col items-center py-10 bg-gray-300">
-      <div className="mb-8 w-full max-w-5xl mx-auto px-4 lg:px-0">
-        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-400 py-3 px-6 rounded-lg inline-block">
+    <div className="relative min-h-screen bg-gray-100 flex flex-col items-center py-8 bg-gray-300">
+      <div className="flex justify-end">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-400 rounded-lg mb-0">
           Productos
         </h1>
       </div>
 
       <div
-        className={`flex flex-col lg:flex-row w-full ${
+        className={`flex flex-col lg:flex-row w-full -mt-10 ${
           showQR ? "blur-md" : ""
         }`}
       >
-        <div className="flex-1 grid grid-cols-1 gap-8 px-4 md:px-8 mt-20">
+        <div className="flex-1 grid grid-cols-1 gap-6 px-4 md:px-8 mt-20">
           {localProducts.map((product) => (
             <div
               key={product._id}
-              className="bg-white shadow-md rounded-lg p-4 flex items-center justify-between transform transition-transform duration-300 hover:scale-105 hover:shadow-lg"
+              className="bg-white shadow-md rounded-lg p-4 flex items-center justify-between transform transition-transform duration-500 hover:scale-105 hover:shadow-lg"
             >
               <div className="flex items-center">
                 <img
@@ -322,7 +244,8 @@ const handlePayment = async () => {
                   >
                     <div className="flex flex-col sm:flex-row items-center space-x-2 md:space-x-4">
                       <span className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm">
-                        {product.quantity} {formatUnits(product.quantity)}
+                        {product.quantity}{" "}
+                        {product.quantity > 1 ? "unidades" : "unidad"}
                       </span>
                       <span className="font-medium text-gray-700">
                         {product.name}
@@ -340,9 +263,7 @@ const handlePayment = async () => {
 
               <div className="mt-4 border-t pt-4 flex justify-between font-bold">
                 <span>Total de productos:</span>
-                <span>
-                  {totalProducts} {formatUnits(totalProducts)}
-                </span>
+                <span>{selectedProducts.length}</span>
               </div>
               <div className="mt-4 border-t pt-4 flex justify-between font-bold">
                 <span>Total a pagar:</span>
@@ -367,16 +288,10 @@ const handlePayment = async () => {
               </button>
             </div>
           )}
-           {/* 
-          <button
-            className="bg-yellow-500 text-white px-4 py-2 mt-4 rounded-lg shadow-lg"
-            onClick={simulatePaymentSuccess}
-          >
-            Simular Pago Exitoso
-          </button>*/}
         </div>
       </div>
-{showQR && (
+
+      {showQR && (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50">
         <div className="relative bg-white p-8 rounded-lg shadow-lg w-11/12 sm:w-4/5 max-w-lg min-h-[70%] h-auto">
 
@@ -433,9 +348,11 @@ const handlePayment = async () => {
           </div>
         </div>
       )}
-      
     </div>
   );
 };
 
 export default Home;
+
+
+  /
