@@ -85,7 +85,7 @@ export const Home = () => {
       text: "Gracias por tu compra.",
       icon: "success",
       showConfirmButton: false,
-      timer: 2000,
+      timer: 4000,
     });
     handleCloseQR();
     setTimeout(() => {
@@ -97,7 +97,7 @@ export const Home = () => {
       text: "El pago fue rechazado, intente nuevamente...",
       icon: "error",
       showConfirmButton: false,
-      timer: 2000,
+      timer: 4000,
     });
     setTimeout(() => {
       window.location.reload();
