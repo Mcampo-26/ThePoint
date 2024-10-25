@@ -17,7 +17,8 @@ const socket = io("https://thepointback-03939a97aeeb.herokuapp.com", {
 });
 
 const Home = () => {
-  const { createPaymentLink, paymentLink, paymentLoading } = usePaymentStore();
+  const { createPaymentLink, createModoCheckout, paymentLink, paymentLoading } =
+    usePaymentStore();
   const { products, fetchProducts, needsUpdate, setNeedsUpdate } =
     useProductStore();
   const [modoQR, setModoQR] = useState(null);
