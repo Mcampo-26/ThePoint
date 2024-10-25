@@ -6,6 +6,8 @@ import { useProductStore } from "../store/useProductStore";
 import ReactQRCode from "react-qr-code";
 import Swal from "sweetalert2";
 import io from "socket.io-client";
+import mercadopagoLogo from "../assets/mercadopago.png";
+import modoLogo from "../assets/modo.png";
 
 // URL de tu servidor WebSocket en Heroku
 const socket = io("https://thepointback-03939a97aeeb.herokuapp.com", {
@@ -18,10 +20,13 @@ const Home = () => {
   const { createPaymentLink, paymentLink, paymentLoading } = usePaymentStore();
   const { products, fetchProducts, needsUpdate, setNeedsUpdate } =
     useProductStore();
+  const [modoQR, setModoQR] = useState(null);
+   const [modoDeeplink, setModoDeeplink] = useState(null); // Estado
   const [localProducts, setLocalProducts] = useState([]); // Para gestionar cantidades de productos seleccionados
   const [showQR, setShowQR] = useState(false); // Estado para mostrar/ocultar el QR
   const [paymentStatus, setPaymentStatus] = useState(null); // Estado del pago
   const [paymentId, setPaymentId] = useState(null); // ID del pago
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("mercadoPago"); 
 
   // Obtener productos al cargar el componente
   useEffect(() => {
@@ -50,56 +55,69 @@ const Home = () => {
   }, [localProducts]);
 
   // Maneja el evento WebSocket para recibir el pago exitoso
-  useEffect(() => {
-    socket.on("connect", () => {
-      console.log("Conectado al servidor WebSocket");
-    });
+   useEffect(() => {
+  socket.on("connect", () => {
+    console.log("Conectado al servidor WebSocket con socket ID:", socket.id);
+  });
 
-    socket.on("paymentSuccess", ({ status, paymentId }) => {
-      handlePaymentResult(status, paymentId);
-    });
+  // Manejo de pago exitoso
+  socket.on("paymentSuccess", ({ status, paymentId }) => {
+    handlePaymentResult(status, paymentId);
+  });
 
-    socket.on("disconnect", () => {
-      console.log("Desconectado del servidor WebSocket");
-    });
+  // Manejo de pago rechazado
+  socket.on("paymentFailed", ({ status, paymentId }) => {
+    console.log("Pago rechazado recibido:", status, paymentId);
+    handlePaymentResult(status, paymentId); // Puedes reutilizar esta función para manejar ambos casos o crear una nueva
+  });
 
-    return () => {
-      socket.off("paymentSuccess");
-      socket.disconnect();
-    };
-  }, []);
+  socket.on("disconnect", () => {
+    console.log("Desconectado del servidor WebSocket");
+  });
+
+  return () => {
+    socket.off("paymentSuccess");
+    socket.off("paymentFailed"); // Desconectar el evento paymentFailed también
+    socket.disconnect();
+  };
+}, []);
 
   // Maneja el resultado del pago
   const handlePaymentResult = async (status, paymentId) => {
-    const storedProducts = JSON.parse(localStorage.getItem("selectedProducts")) || [];
-    const selectedProducts = storedProducts.filter((product) => product.quantity > 0);
+  const storedProducts =
+    JSON.parse(localStorage.getItem("selectedProducts")) || [];
+  const selectedProducts = storedProducts.filter(
+    (product) => product.quantity > 0
+  );
 
-    setPaymentStatus(status);
-    setPaymentId(paymentId);
+  setPaymentStatus(status);
+  setPaymentId(paymentId);
 
-    if (status === "approved") {
-      printTickets(selectedProducts);
-      await Swal.fire({
-        title: "¡Pago Exitoso!",
-        text: "Gracias por tu compra.",
-        icon: "success",
-        showConfirmButton: false,
-        timer: 6000,
-      });
-      handleCloseQR();
-      setTimeout(() => {
-         window.location.reload();
-      }, 100);
-    } else if (status === "rejected") {
-      await Swal.fire({
-        title: "Pago Rechazado",
-        text: "Lamentablemente, el pago fue rechazado.",
-        icon: "error",
-        showConfirmButton: false,
-        timer: 2000,
-      });
-    }
-  };
+  if (status === "approved" || status === "ACCEPTED") {
+    await Swal.fire({
+      title: "¡Pago Exitoso!",
+      text: "Gracias por tu compra.",
+      icon: "success",
+      showConfirmButton: false,
+      timer: 2000,
+    });
+    handleCloseQR();
+    setTimeout(() => {
+      window.location.reload();
+    }, 100);
+  } else if (status === "REJECTED" || status === "rejected") {
+    await Swal.fire({
+      title: "Pago Rechazado",
+      text: "El pago fue rechazado, intente nuevamente...",
+      icon: "error",
+      showConfirmButton: false,
+      timer: 2000,
+    });
+    setTimeout(() => {
+      window.location.reload();
+    }, 100); // Recarga después del Swal
+  }
+};
 
   // Función para imprimir los tickets
   const printTickets = (selectedProducts) => {
@@ -209,13 +227,38 @@ const Home = () => {
     return quantity === 1 ? "unidad" : "unidades";
   };
 
-  const handlePayment = async () => {
+const handlePayment = async () => {
     const productName = "La Previa";
+    const socketId = socket.id; // Obtener el ID del socket conectado
+    const selectedProducts = localProducts.filter(
+      (product) => product.quantity > 0
+    );
+    const totalAmount = selectedProducts.reduce(
+      (total, product) => total + product.quantity * product.price,
+      0
+    );
+
+    // Crear un array con los detalles del producto para MODO
+    const details = selectedProducts.map((product) => ({
+      productName: product.name,
+      quantity: product.quantity,
+      price: product.price,
+    }));
+
     try {
-      await createPaymentLink(productName, totalAmount);
+      // Crear QR tanto para Mercado Pago como para MODO
+      const [mercadoPagoResponse, modoResponse] = await Promise.all([
+        createPaymentLink(productName, totalAmount, selectedProducts, socketId),
+        createModoCheckout(totalAmount, details,socketId),
+      ]);
+
+      // Setear el link de Mercado Pago y los detalles de MODO
+      setModoQR(modoResponse.qr);
+      setModoDeeplink(modoResponse.deeplink);
+
       setShowQR(true);
     } catch (error) {
-      console.error("Error al generar el enlace de pago:", error);
+      console.error("Error al generar los QRs:", error);
     }
   };
 
@@ -337,30 +380,64 @@ const Home = () => {
           </button>*/}
         </div>
       </div>
-
-      {showQR && paymentLink && (
+{showQR && (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50">
-          <div className="relative bg-white p-6 rounded-lg shadow-lg w-11/12 sm:w-4/5 max-w-md h-auto">
+        <div className="relative bg-white p-8 rounded-lg shadow-lg w-11/12 sm:w-4/5 max-w-lg min-h-[70%] h-auto">
+
             <button
               className="absolute -top-4 -right-4 text-red-500 hover:text-red-700 bg-white rounded-full p-2"
               onClick={handleCloseQR}
             >
-              <FontAwesomeIcon
-                icon={faTimes}
-                size="xl"
-                className="text-red-500 cursor-pointer transition-transform duration-200 hover:rotate-90"
-              />
+              <FontAwesomeIcon icon={faTimes} size="xl" />
             </button>
-            <div className="flex justify-center items-center w-full">
-              <ReactQRCode
-                value={paymentLink}
-                size={450}
-                className="max-w-full h-auto"
-              />
+
+            <div className="flex justify-center space-x-8 mb-6">
+              <button
+                className={`flex justify-center items-center w-40 h-20 rounded-md shadow-md border border-gray-300 transition-shadow duration-200 ${
+                  selectedPaymentMethod === "mercadoPago"
+                    ? "shadow-lg border-blue-600 bg-blue-100"
+                    : "hover:shadow-lg hover:border-green-100"
+                } mr-8`}
+                onClick={() => setSelectedPaymentMethod("mercadoPago")}
+              >
+                <img
+                  src={mercadopagoLogo}
+                  alt="Mercado Pago"
+                  className="w-22 h-9"
+                />
+              </button>
+              <button
+                className={`flex justify-center items-center w-40 h-20 rounded-md shadow-md border border-gray-300 transition-shadow duration-200 ${
+                  selectedPaymentMethod === "modo"
+                    ? "shadow-lg border-blue-500 bg-blue-100"
+                    : "hover:shadow-lg hover:border-green-100"
+                } ml-10`}
+                onClick={() => setSelectedPaymentMethod("modo")}
+              >
+                <img src={modoLogo} alt="MODO" className="w-20 h-5" />
+              </button>
+            </div>
+
+            <div className="flex justify-center items-center">
+              {selectedPaymentMethod === "mercadoPago" && paymentLink && (
+                <ReactQRCode
+                  value={paymentLink}
+                  size={300}
+                  className="max-w-full h-auto"
+                />
+              )}
+              {selectedPaymentMethod === "modo" && modoQR && (
+                <ReactQRCode
+                  value={modoQR}
+                  size={300}
+                  className="max-w-full h-auto"
+                />
+              )}
             </div>
           </div>
         </div>
       )}
+      
     </div>
   );
 };
