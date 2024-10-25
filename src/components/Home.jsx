@@ -79,6 +79,7 @@ export const Home = () => {
   setPaymentId(paymentId);
 
   if (status === "approved" || status === "ACCEPTED") {
+    printTickets(selectedProducts);
     await Swal.fire({
       title: "¡Pago Exitoso!",
       text: "Gracias por tu compra.",
@@ -103,7 +104,62 @@ export const Home = () => {
     }, 100); // Recarga después del Swal
   }
 };
+ // Función para imprimir los tickets
+const printTickets = (selectedProducts) => {
+  if (selectedProducts.length === 0) {
+    console.log("No hay productos seleccionados para imprimir.");
+    return;
+  }
 
+  // Obtén la fecha y hora actual
+  const currentDateTime = new Date().toLocaleString(); // Formato de fecha y hora local
+
+  let ticketContent = selectedProducts
+    .map((product) =>
+      Array.from({ length: product.quantity })
+        .map(
+          () => `
+            <div class="ticket-container">
+            <div class="ticket-datetime">Fecha y Hora: ${currentDateTime}</div>
+              <h2 class="ticket-title">1x</h2>
+              <p class="ticket-item">${product.name}</p>
+              <h2 class="ticket-footer">gracias por su compra...</h2>
+              
+            </div>`
+        )
+        .join("")
+    )
+    .join("");
+
+  const printWindow = window.open("", "", "width=500,height=500");
+  if (!printWindow) {
+    alert("Error: El navegador bloqueó la ventana de impresión. Permita las ventanas emergentes.");
+    return;
+  }
+
+  printWindow.document.write(`
+    <html>
+      <head>
+        <style>
+          body { text-align: center; margin: 0; padding: 0; height: auto; }
+          .ticket-container { width: 100%; height: auto; }
+            .ticket-datetime { font-size: 12px; color: gray; margin-top: 10px; }
+          .ticket-title { font-size: 20px; margin-top: 1px; }
+          .ticket-item { font-size: 55px; margin-top: -15px; }
+          .ticket-footer { font-size: 10px; margin-top: -20px; }
+        
+        </style>
+      </head>
+      <body onload="window.print();window.close()">
+        ${ticketContent}
+      </body>
+    </html>
+  `);
+  printWindow.document.close();
+};
+
+
+  
   const handleCloseQR = () => {
     setShowQR(false);
   };
