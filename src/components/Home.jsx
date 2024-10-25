@@ -88,7 +88,7 @@ export const Home = () => {
   setPaymentStatus(status);
   setPaymentId(paymentId);
 
-  if (status === "approved") {
+  if (status === "approved" || status === "ACCEPTED") {
     await Swal.fire({
       title: "¡Pago Exitoso!",
       text: "Gracias por tu compra.",
