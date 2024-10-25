@@ -1,16 +1,26 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import Home from './components/Home'; // Componente principal para manejar todas las rutas
-import AdminPanel from './components/AdminPanel'; // Componente para el panel de administración
+import Home from './components/Home';
+import AdminPanel from './components/AdminPanel';
+import socket from './utilities/socket.js';
 
 function App() {
+  useEffect(() => {
+    socket.connect(); // Conectar socket al cargar `App`
+
+    socket.on("connect", () => {
+      console.log("Conectado al servidor WebSocket con socket ID:", socket.id);
+    });
+
+    return () => {
+      socket.disconnect(); // Desconectar socket cuando se desmonta `App`
+    };
+  }, []);
+
   return (
     <Router>
       <Routes>
-        {/* Ruta principal */}
         <Route path="/" element={<Home />} />
-
-        {/* Ruta para el panel de administración */}
         <Route path="/admin" element={<AdminPanel />} />
       </Routes>
     </Router>
