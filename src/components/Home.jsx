@@ -51,20 +51,18 @@ const Home = () => {
   }, [localProducts]);
 
   // Maneja el evento WebSocket para recibir el pago exitoso
-   useEffect(() => {
+  useEffect(() => {
   socket.on("connect", () => {
     console.log("Conectado al servidor WebSocket con socket ID:", socket.id);
   });
 
-  // Manejo de pago exitoso
   socket.on("paymentSuccess", ({ status, paymentId }) => {
     handlePaymentResult(status, paymentId);
   });
 
-  // Manejo de pago rechazado
   socket.on("paymentFailed", ({ status, paymentId }) => {
     console.log("Pago rechazado recibido:", status, paymentId);
-    handlePaymentResult(status, paymentId); // Puedes reutilizar esta función para manejar ambos casos o crear una nueva
+    handlePaymentResult(status, paymentId);
   });
 
   socket.on("disconnect", () => {
@@ -73,10 +71,11 @@ const Home = () => {
 
   return () => {
     socket.off("paymentSuccess");
-    socket.off("paymentFailed"); // Desconectar el evento paymentFailed también
+    socket.off("paymentFailed");
     socket.disconnect();
   };
 }, []);
+
 
   // Maneja el resultado del pago
   const handlePaymentResult = async (status, paymentId) => {
