@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import axios from 'axios';
 import { URL } from '../utilities/config.js';
+import socket from "../utilities/socket.js"; 
+
 
 export const usePaymentStore = create((set) => ({
   // Estado de pagos
