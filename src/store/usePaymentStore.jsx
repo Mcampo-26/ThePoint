@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import axios from 'axios';
 import { URL } from '../utilities/config.js';
+import socket from "../utilities/socket.js"; 
+
 
 export const usePaymentStore = create((set) => ({
   // Estado de pagos
@@ -50,6 +52,7 @@ export const usePaymentStore = create((set) => ({
     const response = await axios.post(`${URL}/Pagos/create_modo`, {
       price: parseFloat(price),
       details: details,
+      socketId: socket.id 
     });
 
     // Desestructura la respuesta
