@@ -358,7 +358,7 @@ const printTickets = (selectedProducts) => {
               <FontAwesomeIcon icon={faTimes} size="xl" />
             </button>
 
-            <div className="flex justify-center space-x-8 mb-6">
+            <div className="flex justify-center space-x-8 mb-6 mt-5">
               <button
                 className={`flex justify-center items-center w-40 h-20 rounded-md shadow-md border border-gray-300 transition-shadow duration-200 ${
                   selectedPaymentMethod === "mercadoPago"
