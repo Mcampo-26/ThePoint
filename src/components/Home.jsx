@@ -390,14 +390,14 @@ const printTickets = (selectedProducts) => {
                 <ReactQRCode
                   value={paymentLink}
                   size={300}
-                  className="max-w-full h-auto"
+                  className="max-w-full h-auto mt-5"
                 />
               )}
               {selectedPaymentMethod === "modo" && modoQR && (
                 <ReactQRCode
                   value={modoQR}
                   size={300}
-                  className="max-w-full h-auto"
+                  className="max-w-full h-auto mt-5"
                 />
               )}
             </div>
