@@ -317,7 +317,7 @@ const printTickets = (selectedProducts) => {
                 ))}
               </ul>
 
-          Para comentar esas líneas en JSX, simplemente envuélvelas en {/* ... */}. Aquí tienes cómo hacerlo:
+      
 
 {/* 
 <div className="mt-4 border-t pt-4 flex justify-between font-bold">
