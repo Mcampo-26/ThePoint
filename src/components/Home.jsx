@@ -317,10 +317,18 @@ const printTickets = (selectedProducts) => {
                 ))}
               </ul>
 
-              div className="mt-4 border-t pt-4 flex justify-between font-bold">
-              <span>Total de productos:</span>
-                <span>{selectedProducts.length}</span>
-              </div>
+          Para comentar esas líneas en JSX, simplemente envuélvelas en {/* ... */}. Aquí tienes cómo hacerlo:
+
+{/* 
+<div className="mt-4 border-t pt-4 flex justify-between font-bold">
+  <span>Total de productos:</span>
+  <span>{selectedProducts.length}</span>
+</div> 
+*/}
+
+Este código quedará comentado y no se renderizará en la interfaz.
+
+
               <div className="mt-4 border-t pt-4 flex justify-between font-bold">
                 <span>Total a pagar:</span>
                 <span>${totalAmount}</span>
