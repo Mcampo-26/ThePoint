@@ -326,7 +326,7 @@ const printTickets = (selectedProducts) => {
 </div> 
 */}
 
-Este código quedará comentado y no se renderizará en la interfaz.
+
 
 
               <div className="mt-4 border-t pt-4 flex justify-between font-bold">
