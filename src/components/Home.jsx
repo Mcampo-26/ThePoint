@@ -317,10 +317,10 @@ const printTickets = (selectedProducts) => {
                 ))}
               </ul>
 
-              <div className="mt-4 border-t pt-4 flex justify-between font-bold">
-                <span>Total de productos:</span>
-                <span>{selectedProducts.length}</span>
-              </div>
+              //<div className="mt-4 border-t pt-4 flex justify-between font-bold">
+                //<span>Total de productos:</span>
+                //<span>{selectedProducts.length}</span>
+             // </div>
               <div className="mt-4 border-t pt-4 flex justify-between font-bold">
                 <span>Total a pagar:</span>
                 <span>${totalAmount}</span>
