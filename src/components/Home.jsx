@@ -334,7 +334,7 @@ const Home = () => {
             onClick={simulatePaymentSuccess}
           >
             Simular Pago Exitoso
-          
+          </button>
         </div>
       </div>
 
