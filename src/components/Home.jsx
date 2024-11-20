@@ -7,11 +7,8 @@ import { useProductStore } from "../store/useProductStore";
 import Swal from "sweetalert2";
 import socket from "../utilities/socket.js";
 
-
-
 export const Home = () => {
-  const {createOrder, paymentLoading} =
-    usePaymentStore();
+  const { createOrder, paymentLoading } = usePaymentStore();
   const { products, fetchProducts, needsUpdate, setNeedsUpdate } =
     useProductStore();
 
@@ -19,7 +16,7 @@ export const Home = () => {
   const [showQR, setShowQR] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState(null); // Estado del pago
   const [paymentId, setPaymentId] = useState(null); // ID del pago // Estado para mostrar/ocultar el QR
- 
+
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
@@ -60,61 +57,58 @@ export const Home = () => {
     };
   }, []);
 
-
   // Función para manejar el resultado del pago
- const handlePaymentResult = async (status, paymentId) => {
-  const storedProducts =
-    JSON.parse(localStorage.getItem("selectedProducts")) || [];
-  const selectedProducts = storedProducts.filter(
-    (product) => product.quantity > 0
-  );
+  const handlePaymentResult = async (status, paymentId) => {
+    const storedProducts =
+      JSON.parse(localStorage.getItem("selectedProducts")) || [];
+    const selectedProducts = storedProducts.filter(
+      (product) => product.quantity > 0
+    );
 
-  setPaymentStatus(status);
-  setPaymentId(paymentId);
-  
+    setPaymentStatus(status);
+    setPaymentId(paymentId);
 
-  if (status === "approved" || status === "ACCEPTED") {
-    
-    await Swal.fire({
-      title: "¡Pago Exitoso!",
-      text: "Gracias por tu compra.",
-      icon: "success",
-      showConfirmButton: false,
-      timer: 2000,
-    });
-    printTickets(selectedProducts);
-    handleCloseQR();
-    setTimeout(() => {
-      window.location.reload();
-    }, 150);
-  } else if (status === "REJECTED" || status === "rejected") {
-    await Swal.fire({
-      title: "Pago Rechazado",
-      text: "El pago fue rechazado, intente nuevamente...",
-      icon: "error",
-      showConfirmButton: false,
-      timer: 2500,
-    });
-    setTimeout(() => {
-      window.location.reload();
-    }, 100); // Recarga después del Swal
-  }
-};
- // Función para imprimir los tickets
-const printTickets = (selectedProducts) => {
-  if (selectedProducts.length === 0) {
-    console.log("No hay productos seleccionados para imprimir.");
-    return;
-  }
+    if (status === "approved" || status === "ACCEPTED") {
+      await Swal.fire({
+        title: "¡Pago Exitoso!",
+        text: "Gracias por tu compra.",
+        icon: "success",
+        showConfirmButton: false,
+        timer: 2000,
+      });
+      printTickets(selectedProducts);
+      handleCloseQR();
+      setTimeout(() => {
+        window.location.reload();
+      }, 150);
+    } else if (status === "REJECTED" || status === "rejected") {
+      await Swal.fire({
+        title: "Pago Rechazado",
+        text: "El pago fue rechazado, intente nuevamente...",
+        icon: "error",
+        showConfirmButton: false,
+        timer: 2500,
+      });
+      setTimeout(() => {
+        window.location.reload();
+      }, 100); // Recarga después del Swal
+    }
+  };
+  // Función para imprimir los tickets
+  const printTickets = (selectedProducts) => {
+    if (selectedProducts.length === 0) {
+      console.log("No hay productos seleccionados para imprimir.");
+      return;
+    }
 
-  // Obtén la fecha y hora actual
-  const currentDateTime = new Date().toLocaleString(); // Formato de fecha y hora local
+    // Obtén la fecha y hora actual
+    const currentDateTime = new Date().toLocaleString(); // Formato de fecha y hora local
 
-  let ticketContent = selectedProducts
-    .map((product) =>
-      Array.from({ length: product.quantity })
-        .map(
-          () => `
+    let ticketContent = selectedProducts
+      .map((product) =>
+        Array.from({ length: product.quantity })
+          .map(
+            () => `
             <div class="ticket-container">
             <div class="ticket-datetime"> ${currentDateTime}</div>
               <h2 class="ticket-title">1x</h2>
@@ -122,18 +116,20 @@ const printTickets = (selectedProducts) => {
               <h2 class="ticket-footer">gracias por su compra...</h2>
               
             </div>`
-        )
-        .join("")
-    )
-    .join("");
+          )
+          .join("")
+      )
+      .join("");
 
-  const printWindow = window.open("", "", "width=500,height=500");
-  if (!printWindow) {
-    alert("Error: El navegador bloqueó la ventana de impresión. Permita las ventanas emergentes.");
-    return;
-  }
+    const printWindow = window.open("", "", "width=500,height=500");
+    if (!printWindow) {
+      alert(
+        "Error: El navegador bloqueó la ventana de impresión. Permita las ventanas emergentes."
+      );
+      return;
+    }
 
-  printWindow.document.write(`
+    printWindow.document.write(`
     <html>
       <head>
         <style>
@@ -151,11 +147,9 @@ const printTickets = (selectedProducts) => {
       </body>
     </html>
   `);
-  printWindow.document.close();
-};
+    printWindow.document.close();
+  };
 
-
-  
   const handleCloseQR = () => {
     setShowQR(false);
   };
@@ -180,7 +174,7 @@ const printTickets = (selectedProducts) => {
 
     try {
       // Crear QR tanto para Mercado Pago como para MODO
-      await createOrder("Compra en La Previa", selectedProducts, totalAmount); 
+      await createOrder("Compra en La Previa", selectedProducts, totalAmount);
 
       setShowQR(true);
     } catch (error) {
@@ -254,18 +248,19 @@ const printTickets = (selectedProducts) => {
                   {product.name} - ${product.price}
                 </h2>
               </div>
-              <div className="flex items-center space-x-2 md:space-x-4">
+              <div className="flex items-center space-x-4 md:space-x-10">
                 <button
-                  className="bg-red-500 text-white px-2 md:px-4 py-1 md:py-2 rounded"
+                  className="bg-red-500 text-white w-12 h-12 md:w-20 md:h-20 rounded text-xl"
                   onClick={() => decrementQuantity(product._id)}
                 >
                   -
                 </button>
-                <span className="text-lg md:text-xl font-bold">
+                <span className="text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-bold">
                   {product.quantity}
                 </span>
+
                 <button
-                  className="bg-green-500 text-white px-2 md:px-4 py-1 md:py-2 rounded"
+                  className="bg-green-500 text-white w-12 h-12 md:w-20 md:h-20 rounded text-xl"
                   onClick={() => incrementQuantity(product._id)}
                 >
                   +
@@ -292,7 +287,7 @@ const printTickets = (selectedProducts) => {
                         {product.quantity}{" "}
                         {product.quantity > 1 ? "unidades" : "unidad"}
                       </span>
-                      <span className="font-medium text-gray-700">
+                      <span className="font-medium text-blue-700 font-bold uppercase ">
                         {product.name}
                       </span>
                     </div>
@@ -306,17 +301,12 @@ const printTickets = (selectedProducts) => {
                 ))}
               </ul>
 
-      
-
-{/* 
+              {/* 
 <div className="mt-4 border-t pt-4 flex justify-between font-bold">
   <span>Total de productos:</span>
   <span>{selectedProducts.length}</span>
 </div> 
 */}
-
-
-
 
               <div className="mt-4 border-t pt-4 flex justify-between font-bold">
                 <span>Total a pagar:</span>
@@ -347,7 +337,9 @@ const printTickets = (selectedProducts) => {
       {showQR && (
         <div className="fixed flex items-center justify-center bg-gray-100 bg-opacity-90 mt-2 ">
           <div className="flex flex-col items-center bg-white shadow-lg rounded-lg p-4">
-            <h2 className="text-lg font-bold mb-4 text-center">Escanea el QR</h2>
+            <h2 className="text-lg font-bold mb-4 text-center">
+              Escanea el QR
+            </h2>
             <img
               src="https://www.mercadopago.com/instore/merchant/qr/106583461/f146bc9de93842e9bb5ae5025e4fe9b882cd072f031d429aa3682768e7c0aed1.png"
               alt="QR Fijo"
