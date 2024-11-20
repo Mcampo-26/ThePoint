@@ -68,7 +68,6 @@ export const Home = () => {
     setPaymentStatus(status);
     setPaymentId(paymentId);
 
-<<<<<<< HEAD
     if (status === "approved" || status === "ACCEPTED") {
       await Swal.fire({
         title: "¡Pago Exitoso!",
@@ -101,41 +100,6 @@ export const Home = () => {
       console.log("No hay productos seleccionados para imprimir.");
       return;
     }
-=======
-  if (status === "approved" || status === "ACCEPTED") {
-    
-    await Swal.fire({
-      title: "¡Pago Exitoso!",
-      text: "Gracias por tu compra.",
-      icon: "success",
-      showConfirmButton: false,
-      timer: 2000,
-    });
-    printTickets(selectedProducts);
-    handleCloseQR();
-    setTimeout(() => {
-      window.location.reload();
-    }, 150);
-  } else if (status === "REJECTED" || status === "rejected") {
-    await Swal.fire({
-      title: "Pago Rechazado",
-      text: "El pago fue rechazado, intente nuevamente...",
-      icon: "error",
-      showConfirmButton: false,
-      timer: 4000,
-    });
-    setTimeout(() => {
-      window.location.reload();
-    }, 100); // Recarga después del Swal
-  }
-};
- // Función para imprimir los tickets
-const printTickets = (selectedProducts) => {
-  if (selectedProducts.length === 0) {
-    console.log("No hay productos seleccionados para imprimir.");
-    return;
-  }
->>>>>>> cc396cd104566f20c46173e6399b4cc169d8dfcd
 
     // Obtén la fecha y hora actual
     const currentDateTime = new Date().toLocaleString(); // Formato de fecha y hora local
