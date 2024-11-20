@@ -10,13 +10,15 @@ import socket from "../utilities/socket.js";
 
 
 export const Home = () => {
-  const {createOrder, paymentLoading } =
+  const {createOrder, paymentLoading} =
     usePaymentStore();
   const { products, fetchProducts, needsUpdate, setNeedsUpdate } =
     useProductStore();
 
   const [localProducts, setLocalProducts] = useState([]); // Para gestionar cantidades de productos seleccionados
-  const [showQR, setShowQR] = useState(false); // Estado para mostrar/ocultar el QR
+  const [showQR, setShowQR] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState(null); // Estado del pago
+  const [paymentId, setPaymentId] = useState(null); // ID del pago // Estado para mostrar/ocultar el QR
  
   useEffect(() => {
     fetchProducts();
@@ -68,21 +70,23 @@ export const Home = () => {
   );
 
   setPaymentStatus(status);
+  setPaymentId(paymentId);
   
 
   if (status === "approved" || status === "ACCEPTED") {
-    printTickets(selectedProducts);
+    
     await Swal.fire({
       title: "¡Pago Exitoso!",
       text: "Gracias por tu compra.",
       icon: "success",
       showConfirmButton: false,
-      timer: 2500,
+      timer: 2000,
     });
+    printTickets(selectedProducts);
     handleCloseQR();
     setTimeout(() => {
       window.location.reload();
-    }, 100);
+    }, 150);
   } else if (status === "REJECTED" || status === "rejected") {
     await Swal.fire({
       title: "Pago Rechazado",
