@@ -1,30 +1,22 @@
-
 import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash, faTimes } from "@fortawesome/free-solid-svg-icons";
 import { usePaymentStore } from "../store/usePaymentStore";
 import { useProductStore } from "../store/useProductStore";
-import ReactQRCode from "react-qr-code";
 import Swal from "sweetalert2";
 import socket from "../utilities/socket.js";
-import mercadopagoLogo from "../assets/mercadopago.png";
-import modoLogo from "../assets/modo.png";
-
-
 
 export const Home = () => {
-  const { createPaymentLink, createModoCheckout, paymentLink, paymentLoading } =
-    usePaymentStore();
+  const { createOrder, paymentLoading } = usePaymentStore();
   const { products, fetchProducts, needsUpdate, setNeedsUpdate } =
     useProductStore();
-  const [modoQR, setModoQR] = useState(null); // Estado para almacenar el QR de MODO
-  const [modoDeeplink, setModoDeeplink] = useState(null); // Estado para almacenar el deeplink de MODO
-  const [localProducts, setLocalProducts] = useState([]); // Para gestionar cantidades de productos seleccionados
-  const [showQR, setShowQR] = useState(false); // Estado para mostrar/ocultar el QR
-  const [paymentStatus, setPaymentStatus] = useState(null); // Estado del pago
-  const [paymentId, setPaymentId] = useState(null); // ID del pago
-  const [selectedPaymentMethod, setSelectedPaymentMethod] =
-    useState("mercadoPago"); // Estado para seleccionar el método de pago
+  const [localProducts, setLocalProducts] = useState([]);
+  const [showQR, setShowQR] = useState(false);
+  const [selectedProducts, setSelectedProducts] = useState([]);
+  const [totalAmount, setTotalAmount] = useState(0);
+
+  const FIXED_QR_URL =
+    "https://www.mercadopago.com/instore/merchant/qr/106583461/f146bc9de93842e9bb5ae5025e4fe9b882cd072f031d429aa3682768e7c0aed1.png";
 
   useEffect(() => {
     fetchProducts();
@@ -40,7 +32,7 @@ export const Home = () => {
   useEffect(() => {
     const initializedProducts = products.map((product) => ({
       ...product,
-      quantity: 0, // Inicializa la cantidad en 0 para cada producto
+      quantity: 0,
     }));
     setLocalProducts(initializedProducts);
   }, [products]);
@@ -48,156 +40,6 @@ export const Home = () => {
   useEffect(() => {
     localStorage.setItem("selectedProducts", JSON.stringify(localProducts));
   }, [localProducts]);
-
-  useEffect(() => {
-    // Solo escucha los eventos sin volver a conectar o desconectar el socket
-    socket.on("paymentSuccess", ({ status, paymentId }) => {
-      handlePaymentResult(status, paymentId);
-    });
-
-    socket.on("paymentFailed", ({ status, paymentId }) => {
-      handlePaymentResult(status, paymentId);
-    });
-
-    return () => {
-      // Desactiva los eventos específicos al desmontar `Home`
-      socket.off("paymentSuccess");
-      socket.off("paymentFailed");
-    };
-  }, []);
-
-
-  // Función para manejar el resultado del pago
- const handlePaymentResult = async (status, paymentId) => {
-  const storedProducts =
-    JSON.parse(localStorage.getItem("selectedProducts")) || [];
-  const selectedProducts = storedProducts.filter(
-    (product) => product.quantity > 0
-  );
-
-  setPaymentStatus(status);
-  setPaymentId(paymentId);
-
-  if (status === "approved" || status === "ACCEPTED") {
-    printTickets(selectedProducts);
-    await Swal.fire({
-      title: "¡Pago Exitoso!",
-      text: "Gracias por tu compra.",
-      icon: "success",
-      showConfirmButton: false,
-      timer: 2500,
-    });
-    handleCloseQR();
-    setTimeout(() => {
-      window.location.reload();
-    }, 100);
-  } else if (status === "REJECTED" || status === "rejected") {
-    await Swal.fire({
-      title: "Pago Rechazado",
-      text: "El pago fue rechazado, intente nuevamente...",
-      icon: "error",
-      showConfirmButton: false,
-      timer: 2500,
-    });
-    setTimeout(() => {
-      window.location.reload();
-    }, 100); // Recarga después del Swal
-  }
-};
- // Función para imprimir los tickets
-const printTickets = (selectedProducts) => {
-  if (selectedProducts.length === 0) {
-    console.log("No hay productos seleccionados para imprimir.");
-    return;
-  }
-
-  // Obtén la fecha y hora actual
-  const currentDateTime = new Date().toLocaleString(); // Formato de fecha y hora local
-
-  let ticketContent = selectedProducts
-    .map((product) =>
-      Array.from({ length: product.quantity })
-        .map(
-          () => `
-            <div class="ticket-container">
-            <div class="ticket-datetime"> ${currentDateTime}</div>
-              <h2 class="ticket-title">1x</h2>
-              <p class="ticket-item">${product.name}</p>
-              <h2 class="ticket-footer">gracias por su compra...</h2>
-              
-            </div>`
-        )
-        .join("")
-    )
-    .join("");
-
-  const printWindow = window.open("", "", "width=500,height=500");
-  if (!printWindow) {
-    alert("Error: El navegador bloqueó la ventana de impresión. Permita las ventanas emergentes.");
-    return;
-  }
-
-  printWindow.document.write(`
-    <html>
-      <head>
-        <style>
-          body { text-align: center; margin: 0; padding: 0; height: auto; }
-          .ticket-container { width: 100%; height: auto; }
-            .ticket-datetime { font-size: 12px; color: gray; margin-top: 10px; }
-          .ticket-title { font-size: 20px; margin-top: 1px; }
-          .ticket-item { font-size: 55px; margin-top: -15px; }
-          .ticket-footer { font-size: 10px; margin-top: -25px; }
-        
-        </style>
-      </head>
-      <body onload="window.print();window.close()">
-        ${ticketContent}
-      </body>
-    </html>
-  `);
-  printWindow.document.close();
-};
-
-
-  
-  const handleCloseQR = () => {
-    setShowQR(false);
-  };
-
-  const handlePayment = async () => {
-    const productName = "La Previa";
-    const socketId = socket.id; // Obtener el ID del socket conectado
-    const selectedProducts = localProducts.filter(
-      (product) => product.quantity > 0
-    );
-    const totalAmount = selectedProducts.reduce(
-      (total, product) => total + product.quantity * product.price,
-      0
-    );
-
-    // Crear un array con los detalles del producto para MODO
-    const details = selectedProducts.map((product) => ({
-      productName: product.name,
-      quantity: product.quantity,
-      price: product.price,
-    }));
-
-    try {
-      // Crear QR tanto para Mercado Pago como para MODO
-      const [mercadoPagoResponse, modoResponse] = await Promise.all([
-        createPaymentLink(productName, totalAmount, selectedProducts, socketId),
-        createModoCheckout(totalAmount, details,socketId),
-      ]);
-
-      // Setear el link de Mercado Pago y los detalles de MODO
-      setModoQR(modoResponse.qr);
-      setModoDeeplink(modoResponse.deeplink);
-
-      setShowQR(true);
-    } catch (error) {
-      console.error("Error al generar los QRs:", error);
-    }
-  };
 
   const incrementQuantity = (id) => {
     setLocalProducts(
@@ -227,25 +69,54 @@ const printTickets = (selectedProducts) => {
     );
   };
 
-  const selectedProducts = localProducts.filter(
-    (product) => product.quantity > 0
-  );
+  const handlePayment = async () => {
+    const selected = localProducts.filter((product) => product.quantity > 0);
+    const total = selected.reduce(
+      (sum, product) => sum + product.quantity * product.price,
+      0
+    );
+  
+    setSelectedProducts(selected);
+    setTotalAmount(total);
+  
+    if (selected.length === 0) {
+      Swal.fire({
+        title: "Sin productos",
+        text: "Por favor, selecciona al menos un producto.",
+        icon: "warning",
+        showConfirmButton: false,
+        timer: 2000,
+      });
+      return;
+    }
+  
+    try {
+      await createOrder("Compra en La Previa", selected, total); // Llama a la acción en el store
+      setShowQR(true);
+    } catch (error) {
+      console.error("Error al asociar la orden al QR fijo:", error);
+      Swal.fire({
+        title: "Error",
+        text: "Hubo un problema al asociar la orden.",
+        icon: "error",
+        showConfirmButton: false,
+        timer: 2000,
+      });
+    }
+  };
 
-  const totalAmount = selectedProducts.reduce(
-    (total, product) => total + product.quantity * product.price,
-    0
-  );
+  const handleCloseQR = () => {
+    setShowQR(false);
+  };
 
   return (
-    <div className="relative min-h-screen bg-gray-100 flex flex-col items-center py-8 bg-gray-300">
-      <div className="flex justify-end">
-        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-400 rounded-lg mb-0">
-          Productos
-        </h1>
-      </div>
+    <div className="relative min-h-screen bg-gray-100 flex flex-col items-center py-8">
+      <h1 className="text-3xl sm:text-4xl font-bold text-gray-400 mb-4">
+        Productos
+      </h1>
 
       <div
-        className={`flex flex-col lg:flex-row w-full -mt-10 ${
+        className={`flex flex-col lg:flex-row w-full ${
           showQR ? "blur-md" : ""
         }`}
       >
@@ -253,7 +124,7 @@ const printTickets = (selectedProducts) => {
           {localProducts.map((product) => (
             <div
               key={product._id}
-              className="bg-white shadow-md rounded-lg p-4 flex items-center justify-between transform transition-transform duration-500 hover:scale-105 hover:shadow-lg"
+              className="bg-white shadow-md rounded-lg p-4 flex items-center justify-between"
             >
               <div className="flex items-center">
                 <img
@@ -265,18 +136,16 @@ const printTickets = (selectedProducts) => {
                   {product.name} - ${product.price}
                 </h2>
               </div>
-              <div className="flex items-center space-x-2 md:space-x-4">
+              <div className="flex items-center space-x-2">
                 <button
-                  className="bg-red-500 text-white px-2 md:px-4 py-1 md:py-2 rounded"
+                  className="bg-red-500 text-white px-2 py-1 rounded"
                   onClick={() => decrementQuantity(product._id)}
                 >
                   -
                 </button>
-                <span className="text-lg md:text-xl font-bold">
-                  {product.quantity}
-                </span>
+                <span className="text-lg font-bold">{product.quantity}</span>
                 <button
-                  className="bg-green-500 text-white px-2 md:px-4 py-1 md:py-2 rounded"
+                  className="bg-green-500 text-white px-2 py-1 rounded"
                   onClick={() => incrementQuantity(product._id)}
                 >
                   +
@@ -286,10 +155,8 @@ const printTickets = (selectedProducts) => {
           ))}
         </div>
 
-        <div className="w-full lg:w-1/3 mt-10 lg:mt-0 lg:ml-8 lg:sticky lg:top-4">
-          <h2 className="text-xl md:text-2xl font-semibold mb-4 text-center text-gray-800">
-            Resumen de compra
-          </h2>
+        <div className="w-full lg:w-1/3 mt-10 lg:ml-8 lg:sticky lg:top-4">
+          <h2 className="text-xl font-semibold mb-4 text-center">Resumen</h2>
           {selectedProducts.length > 0 ? (
             <div className="bg-white shadow-md rounded-lg p-4">
               <ul className="divide-y divide-gray-200">
@@ -298,118 +165,40 @@ const printTickets = (selectedProducts) => {
                     key={product._id}
                     className="flex justify-between items-center py-4"
                   >
-                    <div className="flex flex-col sm:flex-row items-center space-x-2 md:space-x-4">
-                      <span className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm">
-                        {product.quantity}{" "}
-                        {product.quantity > 1 ? "unidades" : "unidad"}
-                      </span>
-                      <span className="font-medium text-gray-700">
-                        {product.name}
-                      </span>
-                    </div>
-                    <button
-                      className="text-red-500 hover:text-red-700 font-medium"
-                      onClick={() => removeProduct(product._id)}
-                    >
-                      <FontAwesomeIcon icon={faTrash} />
-                    </button>
+                    <span>
+                      {product.quantity}x {product.name}
+                    </span>
+                    <span>${product.quantity * product.price}</span>
                   </li>
                 ))}
               </ul>
-
-      
-
-{/* 
-<div className="mt-4 border-t pt-4 flex justify-between font-bold">
-  <span>Total de productos:</span>
-  <span>{selectedProducts.length}</span>
-</div> 
-*/}
-
-
-
-
-              <div className="mt-4 border-t pt-4 flex justify-between font-bold">
-                <span>Total a pagar:</span>
+              <div className="mt-4 font-bold flex justify-between">
+                <span>Total:</span>
                 <span>${totalAmount}</span>
               </div>
             </div>
           ) : (
-            <p className="text-gray-500 text-center">
+            <p className="text-center text-gray-500">
               No has seleccionado ningún producto.
             </p>
           )}
-
-          {selectedProducts.length > 0 && (
-            <div className="mt-6">
-              <button
-                className="bg-blue-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg shadow-lg hover:bg-blue-700 transition duration-300 w-full"
-                onClick={handlePayment}
-              >
-                {paymentLoading
-                  ? "Generando enlace..."
-                  : `Comprar por $${totalAmount}`}
-              </button>
-            </div>
-          )}
+          <button
+            className="mt-4 bg-blue-500 text-white py-2 px-4 rounded-lg w-full"
+            onClick={handlePayment}
+          >
+            {paymentLoading ? "Generando orden..." : "Generar orden"}
+          </button>
         </div>
       </div>
 
       {showQR && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50">
-        <div className="relative bg-white p-8 rounded-lg shadow-lg w-11/12 sm:w-4/5 max-w-lg min-h-[60%] h-auto">
-
-            <button
-              className="absolute -top-4 -right-4 text-red-500 hover:text-red-700 bg-white rounded-full p-2"
-              onClick={handleCloseQR}
-            >
-              <FontAwesomeIcon icon={faTimes} size="xl" />
-            </button>
-
-            <div className="flex justify-center space-x-8 mb-6 mt-5">
-              <button
-                className={`flex justify-center items-center w-40 h-20 rounded-md shadow-md border border-gray-300 transition-shadow duration-200 ${
-                  selectedPaymentMethod === "mercadoPago"
-                    ? "shadow-lg border-blue-600 bg-blue-100"
-                    : "hover:shadow-lg hover:border-green-100"
-                } mr-8`}
-                onClick={() => setSelectedPaymentMethod("mercadoPago")}
-              >
-                <img
-                  src={mercadopagoLogo}
-                  alt="Mercado Pago"
-                  className="w-22 h-9"
-                />
-              </button>
-              <button
-                className={`flex justify-center items-center w-40 h-20 rounded-md shadow-md border border-gray-300 transition-shadow duration-200 ${
-                  selectedPaymentMethod === "modo"
-                    ? "shadow-lg border-blue-500 bg-blue-100"
-                    : "hover:shadow-lg hover:border-green-100"
-                } ml-10`}
-                onClick={() => setSelectedPaymentMethod("modo")}
-              >
-                <img src={modoLogo} alt="MODO" className="w-20 h-5" />
-              </button>
-            </div>
-
-            <div className="flex justify-center items-center">
-              {selectedPaymentMethod === "mercadoPago" && paymentLink && (
-                <ReactQRCode
-                  value={paymentLink}
-                  size={300}
-                  className="max-w-full h-auto mt-5"
-                />
-              )}
-              {selectedPaymentMethod === "modo" && modoQR && (
-                <ReactQRCode
-                  value={modoQR}
-                  size={300}
-                  className="max-w-full h-auto mt-5"
-                />
-              )}
-            </div>
-          </div>
+        <div>
+          <h2>Escanea el QR</h2>
+          <img
+            src="https://www.mercadopago.com/instore/merchant/qr/106583461/f146bc9de93842e9bb5ae5025e4fe9b882cd072f031d429aa3682768e7c0aed1.png"
+            alt="QR Fijo"
+          />
+          <button onClick={handleCloseQR}>Cerrar</button>
         </div>
       )}
     </div>
@@ -417,6 +206,3 @@ const printTickets = (selectedProducts) => {
 };
 
 export default Home;
-
-
-  

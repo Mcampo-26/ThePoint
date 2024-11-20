@@ -1,91 +1,46 @@
-import { create } from 'zustand';
-import axios from 'axios';
-import { URL } from '../utilities/config.js';
-import socket from "../utilities/socket.js"; 
-
+import { create } from "zustand";
+import axios from "axios";
+import { NGROK_URL } from "../utilities/config.js";
+import socket from "../utilities/socket.js";
 
 export const usePaymentStore = create((set) => ({
-  // Estado de pagos
+  // Estado inicial
   paymentLoading: false,
   paymentError: null,
-  paymentLink: null,
-  qrCodeURL: null, 
-  modoQRCodeURL: null,
-  modoDeeplink: null,
-  
-  products: JSON.parse(localStorage.getItem('selectedProducts')) || [
-    { id: 1, name: 'Cerveza', price: 200, quantity: 0 },
-    { id: 2, name: 'Fernet', price: 300, quantity: 0 },
-    { id: 3, name: 'Gin', price: 400, quantity: 0 },
-    { id: 4, name: 'Vodka', price: 500, quantity: 0 },
-  ],
+  orderStatus: null, // Estado de la orden (aprobada, rechazada, pendiente)
+  paymentLink: null, // No se usa para QR fijo, pero lo dejo para posibles futuros usos
 
-  // Acción para crear QR dinámico de Mercado Pago
-  createPaymentLink: async (productName, price) => {
+  // Acción para crear una orden asociada al QR fijo
+  createOrder: async (title, items, totalAmount) => {
     set({ paymentLoading: true, paymentError: null });
     try {
-      const response = await axios.post(`${URL}/Pagos/create_payment_link`, {
-        title: productName,
-        price: parseFloat(price),
-            socketId: socket.id 
+      const response = await axios.put(`${NGROK_URL}/Pagos/create_interoperable_qr`, {
+        title,
+        items: items.map((product) => ({
+          name: product.name,
+          price: product.price,
+          quantity: product.quantity,
+        })),
+        totalAmount: parseFloat(totalAmount),
+        socketId: socket.id, // Asociar el socket conectado
       });
-
-      const paymentLink = response.data.paymentLink;
-      if (paymentLink) {
-        set({ paymentLoading: false, paymentLink });
-        return paymentLink;
-      } else {
-        throw new Error('No se recibió un enlace de pago en la respuesta');
-      }
-    } catch (error) {
+  
+      const orderData = response.data; // Respuesta del backend
       set({
-        paymentError: 'Hubo un problema al generar tu enlace de pago.',
+        paymentLoading: false,
+        orderStatus: orderData.status, // Estado de la orden (puedes ajustarlo según la respuesta del backend)
+      });
+  
+      return orderData; // Devuelve la información completa al frontend si es necesario
+    } catch (error) {
+      console.error("Error al asociar la orden al QR fijo:", error.response?.data || error.message);
+      set({
+        paymentError: "Hubo un problema al asociar la orden al QR.",
         paymentLoading: false,
       });
       throw error;
     }
   },
-
-  // Acción para crear checkout de MODO
-  createModoCheckout: async (price, details) => {
-  set({ paymentLoading: true, paymentError: null });
-  try {
-    const response = await axios.post(`${URL}/Pagos/create_modo`, {
-      price: parseFloat(price),
-      details: details,
-      socketId: socket.id 
-    });
-
-    // Desestructura la respuesta
-    const { qr, deeplink } = response.data;
-
-    // Agrega el console.log para verificar la respuesta
-    console.log("Respuesta de MODO:", response.data); // Asegúrate de que esto muestra correctamente los datos
-    console.log("QR recibido en el frontend:", qr);
-
-    // Guarda los datos en el estado de Zustand
-    set({
-      paymentLoading: false,
-      modoQRCodeURL: qr, // El código QR en formato de cadena
-      modoDeeplink: deeplink, // El deep link
-    });
-
-    return { qr, deeplink };
-  } catch (error) {
-    set({
-      paymentError: 'Hubo un problema al crear el checkout de MODO.',
-      paymentLoading: false,
-    });
-    throw error;
-  }
-},
-
-  // Guardar detalles de pago
-
-
-
-  // Manejar webhook de MODO
-
 }));
 
 export default usePaymentStore;
