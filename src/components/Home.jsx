@@ -93,7 +93,7 @@ export const Home = () => {
       text: "El pago fue rechazado, intente nuevamente...",
       icon: "error",
       showConfirmButton: false,
-      timer: 2500,
+      timer: 4000,
     });
     setTimeout(() => {
       window.location.reload();
