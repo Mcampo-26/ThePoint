@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import axios from "axios";
-import { NGROK_URL } from "../utilities/config.js";
+import { URL } from "../utilities/config.js";
 import socket from "../utilities/socket.js";
 
 export const usePaymentStore = create((set) => ({
@@ -14,7 +14,7 @@ export const usePaymentStore = create((set) => ({
   createOrder: async (title, items, totalAmount) => {
     set({ paymentLoading: true, paymentError: null });
     try {
-      const response = await axios.put(`${NGROK_URL}/Pagos/create_interoperable_qr`, {
+      const response = await axios.put(`${URL}/Pagos/create_interoperable_qr`, {
         title,
         items: items.map((product) => ({
           name: product.name,
